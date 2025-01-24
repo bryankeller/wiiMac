@@ -1,0 +1,45 @@
+# Ignore object files and libraries
+*.o
+*.a
+*.so
+*.dylib
+
+# Ignore compiled binaries
+*.out
+*.exe
+*.elf
+
+# macOS system files
+.DS_Store
+
+# Ignore temporary files created by editors
+*~
+*.swp
+*.swo
+.*.sw?
+
+# Ignore log files and debug files
+*.log
+*.tmp
+*.bak
+*.core
+*.stackdump
+
+# Ignore build artifacts
+build/
+dist/
+.deps/
+*.elf.map
+
+# Ignore CMake-generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Ignore Visual Studio Code configuration (if used)
+.vscode/
+
+# Ignore Xcode project files (if applicable)
+*.xcodeproj/
+*.xcworkspace/
