@@ -25,7 +25,7 @@ SECTIONS {
 
 	. = 0x00004000;
 
-	.start : AT(0x00004000) { bin/crt0.o(*) } :app = 0
+	.start : AT(ADDR(.start)) { bin/crt0.o(*) } :app = 0
 
 	.text : { *(.text) *(.text.*) . = ALIGN(32); }
 

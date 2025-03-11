@@ -116,7 +116,7 @@ _realmode_vector:
     lis 3,0x0000
     ori 3,3,2
     lis 4,0x0000
-    ori 4,4,0x3FF
+    ori 4,4,0x03FF
     mtspr IBAT0L,3
     mtspr IBAT0U,4
     isync
@@ -129,7 +129,7 @@ _realmode_vector:
     lis 3,0x1000
     ori 3,3,2
     lis 4,0x1000
-    ori 4,4,0x7FF
+    ori 4,4,0x07FF
     mtspr IBAT1L,3
     mtspr IBAT1U,4
     isync
