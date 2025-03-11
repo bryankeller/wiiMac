@@ -56,57 +56,104 @@ _realmode_vector:
 	// store gathering off, enable data cache
 	// flush assist, enable branch target cache,
 	// enable branch history table
-	lis 3,0x0011 ; ori 3,3,0x0c64 ; mtspr 1008,3 ; isync
+	lis 3,0x0011
+	ori 3,3,0x0c64
+	mtspr 1008,3
+	isync
 
 	// MSR = 00002000 (FP on)
-	li 4,0x2000 ; mtmsr 4
+	li 4,0x2000
+	mtmsr 4
 
 	// HID0 |= 0000c000 (caches on)
-	ori 3,3,0xc000 ; mtspr 1008,3 ; isync
-
-	// clear all BATs
-	li 0,0
-	mtspr 528,0 ; mtspr 530,0 ; mtspr 532,0 ; mtspr 534,0 // IBATU 0..3
-	mtspr 536,0 ; mtspr 538,0 ; mtspr 540,0 ; mtspr 542,0 // DBATU 0..3
-	mtspr 560,0 ; mtspr 562,0 ; mtspr 564,0 ; mtspr 566,0 // IBATU 4..7
-	mtspr 568,0 ; mtspr 570,0 ; mtspr 572,0 ; mtspr 574,0 // DBATU 4..7
+	ori 3,3,0xc000
+	mtspr 1008,3
 	isync
 
-	// clear all SRs
-	lis 0,0x8000
-	mtsr  0,0 ; mtsr  1,0 ; mtsr  2,0 ; mtsr  3,0
-	mtsr  4,0 ; mtsr  5,0 ; mtsr  6,0 ; mtsr  7,0
-	mtsr  8,0 ; mtsr  9,0 ; mtsr 10,0 ; mtsr 11,0
-	mtsr 12,0 ; mtsr 13,0 ; mtsr 14,0 ; mtsr 15,0
-	isync
+    // clear all BATs
+    li 0,0
+    mtspr IBAT0U,0
+    mtspr IBAT1U,0
+    mtspr IBAT2U,0
+    mtspr IBAT3U,0
+    mtspr IBAT4U,0
+    mtspr IBAT5U,0
+    mtspr IBAT6U,0
+    mtspr IBAT7U,0
+    isync
+    mtspr DBAT0U,0
+    mtspr DBAT1U,0
+    mtspr DBAT2U,0
+    mtspr DBAT3U,0
+    mtspr DBAT4U,0
+    mtspr DBAT5U,0
+    mtspr DBAT6U,0
+    mtspr DBAT7U,0
+    isync
 
-	// set [DI]BAT0 for 256MB@80000000,
-	// real 00000000, WIMG=0000, R/W
-	li 3,2 ; lis 4,0x8000 ; ori 4,4,0x1fff
-	mtspr IBAT0L,3 ; mtspr IBAT0U,4 ; mtspr DBAT0L,3 ; mtspr DBAT0U,4 ; isync
+    // clear all SRs
+    lis 0,0x8000
+    mtsr  0,0
+    mtsr  1,0
+    mtsr  2,0
+    mtsr  3,0
+    mtsr  4,0
+    mtsr  5,0
+    mtsr  6,0
+    mtsr  7,0
+    mtsr  8,0
+    mtsr  9,0
+    mtsr 10,0
+    mtsr 11,0
+    mtsr 12,0
+    mtsr 13,0
+    mtsr 14,0
+    mtsr 15,0
+    isync
 
-	// set [DI]BAT4 for 256MB@90000000,
-	// real 10000000, WIMG=0000, R/W
-	addis 3,3,0x1000 ; addis 4,4,0x1000
-	mtspr IBAT4L,3 ; mtspr IBAT4U,4 ; mtspr DBAT4L,3 ; mtspr DBAT4U,4 ; isync
+	// set [DI]BAT0 for 32MB@0x00000000,
+    // real 0x00000000 (start of MEM1), WIMG=0000, R/W
+    lis 3,0x0000
+    ori 3,3,2
+    lis 4,0x0000
+    ori 4,4,0x3FF
+    mtspr IBAT0L,3
+    mtspr IBAT0U,4
+    isync
+    mtspr DBAT0L,3
+    mtspr DBAT0U,4
+    isync
 
-	// set DBAT1 for 256MB@c0000000,
-	// real 00000000, WIMG=0101, R/W
-	li 3,0x2a ; lis 4,0xc000 ; ori 4,4,0x1fff
-	mtspr DBAT1L,3 ; mtspr DBAT1U,4 ; isync
+    // set [DI]BAT1 for 64MB@0x10000000,
+    // real 0x10000000 (start of MEM2), WIMG=0000, R/W
+    lis 3,0x1000
+    ori 3,3,2
+    lis 4,0x1000
+    ori 4,4,0x7FF
+    mtspr IBAT1L,3
+    mtspr IBAT1U,4
+    isync
+    mtspr DBAT1L,3
+    mtspr DBAT1U,4
+    isync
 
-	// set DBAT5 for 256MB@d0000000,
-	// real 10000000, WIMG=0101, R/W
-	addis 3,3,0x1000 ; addis 4,4,0x1000
-	mtspr DBAT5L,3 ; mtspr DBAT5U,4 ; isync
-
-	// enable [DI]BAT4-7 in HID4
-	lis 3, 0x8200
-	mtspr 1011,3
+    // set DBAT2 for 128KB@0x0D800000,
+    // real 0x0D800000 (start of HW registers), WIMG=0101, R/W
+    lis 3,0x0D80
+    ori 3,3,0x2a
+    lis 4,0x0D80
+    ori 4,4,0x003
+    isync
+    mtspr DBAT2L,3
+    mtspr DBAT2U,4
+    isync
 
 	// set MSR[DR:IR] = 11, jump to _start
-	lis 3,_start@h ; ori 3,3,_start@l ; mtsrr0 3
+	lis 3,_start@h
+	ori 3,3,_start@l
+	mtsrr0 3
 
-	mfmsr 3 ; ori 3,3,0x30 ; mtsrr1 3
+	mfmsr 3
+	ori 3,3,0x30
+	mtsrr1 3
 	rfi
-

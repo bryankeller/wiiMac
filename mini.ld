@@ -23,9 +23,9 @@ SECTIONS {
 
 	.realmode : { *(.realmode) } :realmode = 0
 
-	. = 0x80004000;
+	. = 0x00004000;
 
-	.start : AT(ADDR(.start) & 0x3fffffff) { bin/crt0.o(*) } :app = 0
+	.start : AT(0x00004000) { bin/crt0.o(*) } :app = 0
 
 	.text : { *(.text) *(.text.*) . = ALIGN(32); }
 
@@ -48,6 +48,6 @@ SECTIONS {
 	. = ALIGN(0x10000);
 
 	_sbrk_start = .;
-	_sbrk_end = 0x816ffff0;
+	_sbrk_end = 0x016ffff0;
 }
 

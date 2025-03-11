@@ -12,7 +12,7 @@ _start:
 	lis 1,_stack_bot@h ; ori 1,1,_stack_bot@l
 	stwu 0,-64(1)
 
-	lis      2,0x8000
+	lis      2,0x0000
 	stw      1,0x34(2) # write sp
 #	lis      13,_SDA_BASE_@h
 #	ori      13,13,_SDA_BASE_@l # Set the Small Data (Read\Write) base register.	
