@@ -111,7 +111,7 @@ _realmode_vector:
     mtsr 15,0
     isync
 
-	// set [DI]BAT0 for 32MB@0x00000000,
+	// set (I|D)BAT0 for 32MB@0x00000000,
     // real 0x00000000 (start of MEM1), WIMG=0000, R/W
     lis 3,0x0000
     ori 3,3,2
@@ -124,7 +124,7 @@ _realmode_vector:
     mtspr DBAT0U,4
     isync
 
-    // set [DI]BAT1 for 64MB@0x10000000,
+    // set (I|D)BAT1 for 64MB@0x10000000,
     // real 0x10000000 (start of MEM2), WIMG=0000, R/W
     lis 3,0x1000
     ori 3,3,2
@@ -137,12 +137,12 @@ _realmode_vector:
     mtspr DBAT1U,4
     isync
 
-    // set DBAT2 for 256MB@0x0C000000,
-    // real 0x0C000000 (earliest HW registers?), WIMG=0101, R/W
+    // set DBAT2 for 32MB@0x0C000000,
+    // real 0x0C000000 (I/O Base), WIMG=0101, R/W
     lis 3,0x0C00
     ori 3,3,0x2a
     lis 4,0x0C00
-    ori 4,4,0x1FFF
+    ori 4,4,0x03FF
     isync
     mtspr DBAT2L,3
     mtspr DBAT2U,4
