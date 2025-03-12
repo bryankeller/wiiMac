@@ -70,14 +70,29 @@ void hexdump(void *d, int len) {
 	}
 }
 
-int main(void)
-{
+int main(void) {
 	// Cannot gecko_init without delay
 	udelay(1000000);
 	gecko_init();
 
-	printf("Hello World!\n");
+	printf("\nwiiMac\n");
+	printf("(c) 2025 Bryan Keller - @blk19_\n\n");
 
-	return 0;
+	exception_init();
+
+	irq_initialize();
+	irq_bw_enable(BW_PI_IRQ_RESET);
+	irq_bw_enable(BW_PI_IRQ_HW); //hollywood pic
+
+	ipc_initialize();
+	ipc_slowping();
+
+	// int vmode = -1;
+	// init_fb(vmode);
+	// VIDEO_Init(vmode);
+	// VIDEO_SetFrameBuffer(get_xfb());
+	// VISetupEncoder();
+
+    return 0;
 }
 
