@@ -16,19 +16,20 @@ Copyright (C) 2009		Sebastian Falbesoner <sebastian.falbesoner@gmail.com>
 #include "irq.h"
 #include "hollywood.h"
 
-extern char exception_2200_start, exception_2200_end;
+extern char exception_start, exception_end;
 
 void exception_handler(int exception)
 {
 	u32 cookie = irq_kill();
 	// check if the exception was actually an external interrupt
 	if (exception == 0x500) {
+		printf("\nExternal interrupt (0x500)\n");
 		irq_handler();
 	}
 
 	// check if exception happened due to the decrementer
 	else if (exception == 0x900) {
-		//printf("\nDecrementer exception occured - who cares?\n");
+		printf("\nDecrementer exception occured - who cares?\n");
 	}
 
 	else {
@@ -36,6 +37,18 @@ void exception_handler(int exception)
 		u32 i;
 
 		printf("\nException %04X occurred!\n", exception);
+
+		if (exception == 0x700) {
+			__asm__(
+				"lis 5,0x0d80\n\t"
+				"ori 5,5,0x00c0\n\t"
+				"lwz 4,0(5)\n\t"
+				"sync\n\t"
+				"xori 4,4,0x20\n\t"
+				"stw  4,0(5)\n\t"
+				"eieio\n\t"
+			);
+		}
 
 		x = (u32 *)0x00002000;
 
@@ -63,9 +76,9 @@ void exception_handler(int exception)
 void exception_init(void)
 {
 	u32 vector;
-	u32 len_2200;
+	u32 exception_target_len;
 
-	for (vector = 0x100; vector < 0x2000; vector += 0x10) {
+	for (vector = 0x100; vector < 0x2000; vector += 0x100) {
 		u32 *insn = (u32 *)(0x00000000 + vector);
 
 		insn[0] = 0xbc002000;				// stmw 0,0x2000(0)
@@ -75,8 +88,8 @@ void exception_init(void)
 	}
 	sync_before_exec((void *)0x00000100, 0x1f00);
 
-	len_2200 = &exception_2200_end - &exception_2200_start;
-	memcpy((void *)0x00002200, &exception_2200_start, len_2200);
-	sync_before_exec((void *)0x00002200, len_2200);
+	exception_target_len = &exception_end - &exception_start;
+	memcpy((void *)0x00002200, &exception_start, exception_target_len);
+	sync_before_exec((void *)0x00002200, exception_target_len);
 }
 

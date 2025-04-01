@@ -271,16 +271,9 @@ int start_mach_kernel() {
 
     printf("\nCall Kernel @ 0x%08x; boot args: 0x00400000, signature: %08x\n", kernelEntryPoint, kMacOSXSignature);
 
-    // msr = 0x00001000;
-    // __asm__ volatile("mtmsr %0" : : "r" (msr));
+    msr = 0x00001000;
+    __asm__ volatile("mtmsr %0" : : "r" (msr));
     __asm__ volatile("isync");
-
-    // // Move the Execption Vectors
-    // bcopy(gVectorSaveAddr, 0x0, kVectorSize);
-    // for (cnt = 0; cnt < kVectorSize; cnt += 0x20) {
-    //     __asm__ volatile("dcbf 0, %0" : : "r" (cnt));
-    //     __asm__ volatile("icbi 0, %0" : : "r" (cnt));
-    // }
 
     // Make sure everything get sync'd up.
     __asm__ volatile("isync");

@@ -8,9 +8,12 @@ Copyright (C) 2008		Segher Boessenkool <segher@kernel.crashing.org>
 # see file COPYING or http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
 */
 
-.globl exception_2200_start, exception_2200_end
+#define DBAT2U          540
+#define DBAT2L          541
 
-exception_2200_start:
+.globl exception_start, exception_end
+
+exception_start:
 	# store all interesting regs
 	mfcr 0
 	stw 0,0x2080(0)
@@ -29,6 +32,18 @@ exception_2200_start:
 	mfdsisr 0
 	stw 0,0x209c(0)
 
+	# ensure that I/O works, since this BAT could have been disabled
+	# set DBAT2 for 32MB@0x0C000000,
+    # real 0x0C000000 (I/O Base), WIMG=0101, R/W
+    isync
+    lis 0,0x0C00
+    ori 0,0,0x2a
+    mtspr DBAT2L,0
+    lis 0,0x0C00
+    ori 0,0,0x03FF
+    mtspr DBAT2U,0
+    isync
+
 	# switch on FP, DR, IR
 	mfmsr 0
 	ori 0,0,0x2030
@@ -39,5 +54,5 @@ exception_2200_start:
 	ori 0,0,exception_handler@l
 	mtsrr0 0
 	rfi
-exception_2200_end:
+exception_end:
 
