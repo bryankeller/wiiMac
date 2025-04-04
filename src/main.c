@@ -72,11 +72,8 @@ void hexdump(void *d, int len) {
 }
 
 void patch_memory_trap(u32 *offset) {
-	u32 r24 = (u32)offset;
-	offset[0] = 0x3F000000 | ((r24 >> 16) & 0xFFFF); // lis 24 r24h
-	offset[1] = 0x63180000 | (r24 & 0xFFFF); // ori 24, 24, r24l
-	offset[2] = 0x7FE00008; // trap
-	sync_before_exec(offset, 4);
+	offset[0] = 0x7FE00008; // trap
+	sync_before_exec(offset, 1);
 }
 
 int main(void) {
@@ -110,8 +107,8 @@ int main(void) {
 	}
 
 	exception_init();
-	patch_memory_trap((void *)0x0027b7f0);
-
+	// patch_memory_trap((void*)0x00088ff8);
+	patch_memory_trap((void*)0x0027b7f4);
 
 	ret = start_mach_kernel();
 	if (ret != 0) {
