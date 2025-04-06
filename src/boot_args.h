@@ -7,7 +7,7 @@
 
 #include "types.h"
 
-#define bootArgsAddress (0x00500000) // @ 5 MB
+#define boot_args_address (0x00500000) // @ 5 MB
 
 /*
  * Video information..
@@ -44,5 +44,7 @@ typedef struct boot_args {
     u32	deviceTreeLength;           /* Length of flattened tree */
     u32	topOfKernelData;            /* Highest address used in kernel data area */
 } boot_args_t;
+
+void set_up_boot_args();
 
 #endif //BOOT_ARGS_H

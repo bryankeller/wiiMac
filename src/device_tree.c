@@ -54,7 +54,7 @@ static void add_property(const char* name, const void* data, u32 length) {
 }
 
 void build_device_tree() {
-    device_tree_start = bootArgsAddress + sizeof(boot_args_t);
+    device_tree_start = boot_args_address + sizeof(boot_args_t);
     device_tree_end = device_tree_start;
 
     // /

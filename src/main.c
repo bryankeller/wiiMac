@@ -34,6 +34,8 @@ Copyright (C) 2025              Bryan Keller <kellerbryan19@gmail.com>
 #include "sha1.h"
 #include "hollywood.h"
 
+#define kMacOSXSignature 0x4D4F5358
+
 static char ascii(char s) {
 	if(s < 0x20) return '.';
 	if(s > 0x7E) return '.';
@@ -83,53 +85,30 @@ static void patch_memory_nop(u32 *offset) {
 	sync_before_exec(offset, 1);
 }
 
-static boot_args_t* set_up_boot_args() {
-	boot_args_t *boot_args = (boot_args_t*)bootArgsAddress;
+static int start_mach_kernel() {
+	long msr;
 
-	boot_args->Revision = 1;
+	printf("\n");
+	printf("Calling Mach Kernel @ 0x%08x; boot args: 0x%08x, signature: %08x\n", kernel_entry_point, boot_args_address, kMacOSXSignature);
 
-	boot_args->Version = 1;
+	msr = 0x00001000;
+	__asm__ volatile("mtmsr %0" : : "r" (msr));
+	__asm__ volatile("isync");
 
-	sprintf(boot_args->CommandLine, "-v\0");
+	// Make sure everything get sync'd up.
+	__asm__ volatile("isync");
+	__asm__ volatile("sync");
+	__asm__ volatile("eieio");
 
-	for (int i = 0; i < 26; i++) {
-		boot_args->PhysicalDRAM[i].base = 0;
-		boot_args->PhysicalDRAM[i].size = 0;
-	}
+	(*(void (*)())kernel_entry_point)(boot_args_address, kMacOSXSignature);
 
-	// MEM1 24MB @0x00000000
-	boot_args->PhysicalDRAM[0].base = 0x00000000;
-	boot_args->PhysicalDRAM[0].size = 24 * 1024 * 1024;
-
-	// MEM2 64MB @0x10000000
-	boot_args->PhysicalDRAM[1].base = 0x10000000;
-	boot_args->PhysicalDRAM[1].size = 64 * 1024 * 1024;
-
-	boot_args->Video.v_baseAddr = 0;
-	boot_args->Video.v_display = 0;
-	boot_args->Video.v_rowBytes = 0;
-	boot_args->Video.v_width = 0;
-	boot_args->Video.v_height = 0;
-	boot_args->Video.v_depth = 0;
-
-	boot_args->machineType = 0;
-
-	build_device_tree();
-	boot_args->deviceTreeP = (u8*)device_tree_start;
-	boot_args->deviceTreeLength = device_tree_end - device_tree_start;
-
-	boot_args->topOfKernelData = (u32)device_tree_end;
-
-	return boot_args;
+	return -1;
 }
 
 int main(void) {
 	// Cannot gecko_init without delay
 	udelay(1000000);
 	gecko_init();
-
-	printf("\nwiiMac\n");
-	printf("(c) 2025 Bryan Keller - @blk19_\n\n");
 
 	exception_init();
 
@@ -146,23 +125,36 @@ int main(void) {
 	// VIDEO_SetFrameBuffer(get_xfb());
 	// VISetupEncoder();
 
+	printf("\n");
+	printf("wiiMac - A Mac OS X bootloader for the Nintendo Wii\n");
+	printf("(c) 2025 Bryan Keller - @blk19_\n");
+
 	int ret;
 
+	printf("\n");
 	ret = load_mach_kernel("/mk");
 	if (ret != 0) {
 		return -1;
 	}
+
+	printf("Loaded Mach Kernel\n");
 
 	exception_init();
 
 	patch_memory_trap((void*)0x000a0648);
 	// patch_memory_trap((void*)0x0008a9f4);
 
-	boot_args_t *boot_args = set_up_boot_args();
+	printf("\n");
+	printf("Setting up device tree and boot args...");
 
-	print_device_tree(boot_args->deviceTreeP);
+	set_up_boot_args();
 
-	ret = start_mach_kernel(boot_args);
+	printf("\n");
+	printf("Device tree:\n");
+
+	print_device_tree((void*)device_tree_start);
+
+	ret = start_mach_kernel();
 	if (ret != 0) {
 		return -1;
 	}

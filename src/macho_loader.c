@@ -13,8 +13,6 @@
 #define LC_SYMTAB 2
 #define LC_UNIXTHREAD 5
 
-#define kMacOSXSignature 0x4D4F5358
-
 typedef u32 cpu_type_t;
 typedef u32 cpu_subtype_t;
 typedef u32 vm_prot_t;
@@ -109,8 +107,6 @@ typedef struct ppc_thread_state {
     u32 vrsave;	                /* Vector Save Register */
 } ppc_thread_state_t;
 
-static u32 kernelEntryPoint;
-
 static int decode_mach_kernel(u8 *fbuf);
 static int handle_load_cmd(load_command_t *load_cmd, u8 *fbuf);
 static int handle_lc_segment(load_command_t *load_cmd, u8 *fbuf);
@@ -139,7 +135,7 @@ int load_mach_kernel(const char *kernel_path) {
     }
 
     size_t fsize = fp.fsize;
-    u8 *fbuf = (u8*)kernelFileLoadAddress;
+    u8 *fbuf = (u8*)kernel_file_load_address;
 
     u32 bytesRead;
     res = f_read(&fp, fbuf, fsize, &bytesRead);
@@ -153,6 +149,9 @@ int load_mach_kernel(const char *kernel_path) {
 
 static int decode_mach_kernel(u8 *fbuf) {
     mach_header_t *header = (mach_header_t *)fbuf;
+
+    printf("\n");
+    printf("Found kernel header:\n");
     printf("magic: %X\n", header->magic);
     printf("cpu_type: %d\n", header->cputype);
     printf("cpu_subtype: %d\n", header->cpusubtype);
@@ -162,6 +161,7 @@ static int decode_mach_kernel(u8 *fbuf) {
     printf("flags: %X\n", header->flags);
 
     printf("\n");
+    printf("Decoding Mach Kernel...\n");
 
     u8 *cmds_offset = fbuf + sizeof(mach_header_t);
     u32 num_cmds = header->ncmds;
@@ -266,26 +266,7 @@ static int handle_lc_unixthread(load_command_t *load_cmd) {
     ppc_thread_state_t *thread_state = (ppc_thread_state_t *)((u8*)load_cmd + sizeof(thread_command_t));
     printf("SRR0: 0x%08x\n", thread_state->srr0);
 
-    kernelEntryPoint = thread_state->srr0;
+    kernel_entry_point = thread_state->srr0;
 
     return 0;
-}
-
-int start_mach_kernel(boot_args_t *boot_args) {
-    long msr;
-
-    printf("\nCall Kernel @ 0x%08x; boot args: 0x%08x, signature: %08x\n", kernelEntryPoint, (u32)boot_args, kMacOSXSignature);
-
-    msr = 0x00001000;
-    __asm__ volatile("mtmsr %0" : : "r" (msr));
-    __asm__ volatile("isync");
-
-    // Make sure everything get sync'd up.
-    __asm__ volatile("isync");
-    __asm__ volatile("sync");
-    __asm__ volatile("eieio");
-
-    (*(void (*)())kernelEntryPoint)((u32)boot_args, kMacOSXSignature);
-
-    return -1;
 }

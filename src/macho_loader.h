@@ -5,11 +5,10 @@
 #ifndef MACHO_LOADER_H
 #define MACHO_LOADER_H
 
-#include "boot_args.h"
+#define kernel_file_load_address (0x00C00000) // @ 12 MB
 
-#define kernelFileLoadAddress (0x00C00000) // @ 12 MB
+u32 kernel_entry_point;
 
 int load_mach_kernel(const char* kernel_path);
-int start_mach_kernel(boot_args_t *boot_args);
 
 #endif //MACHO_LOADER_H
