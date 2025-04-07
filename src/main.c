@@ -77,12 +77,48 @@ void hexdump(void *d, int len) {
 
 static void patch_memory_trap(u32 *offset) {
 	offset[0] = 0x7FE00008; // trap
-	sync_before_exec(offset, 1);
+	sync_before_exec(offset, 4);
+}
+
+static void patch_memory_syscall(u32 *offset) {
+	offset[0] = 0x44000002; // sc
+	sync_before_exec(offset, 4);
 }
 
 static void patch_memory_nop(u32 *offset) {
 	offset[0] = 0x60000000; // ori, 0, 0, 0
-	sync_before_exec(offset, 1);
+	sync_before_exec(offset, 4);
+}
+
+static void patch_exception_handler(u32 *vector) {
+	// Re-enable IO BAT
+	vector[0] = 0x4C00012C;
+	vector[1] = 0x3C000C00;
+	vector[2] = 0x6000002A;
+	vector[3] = 0x7C1D83A6;
+	vector[4] = 0x3C000C00;
+	vector[5] = 0x600003FF;
+	vector[6] = 0x7C1C83A6;
+	vector[7] = 0x4C00012C;
+
+	// Update MSR
+	vector[8] = 0x7C0000A6;
+	vector[9] = 0x60002030;
+	vector[10] = 0x7C000124;
+
+	// Blink drive light
+	vector[11] = 0x3CA00D80;
+	vector[12] = 0x60A500C0;
+	vector[13] = 0x80850000;
+	vector[14] = 0x7C0004AC;
+	vector[15] = 0x68840020;
+	vector[16] = 0x90850000;
+	vector[17] = 0x7C0004A6;
+
+	// Infinite loop
+	vector[18] = 0x48000000;
+
+	sync_before_exec(vector, 76);
 }
 
 static int start_mach_kernel() {
@@ -139,10 +175,12 @@ int main(void) {
 
 	printf("Loaded Mach Kernel\n");
 
-	exception_init();
+	// patch_exception_handler((void*)0x00000700);
+	patch_exception_handler((void*)0x00000c00);
 
-	patch_memory_trap((void*)0x000a0648);
-	// patch_memory_trap((void*)0x0008a9f4);
+	// patch_memory_trap((void*)0x00029d14);
+	// patch_memory_trap((void*)0x000a0648);
+	// patch_memory_trap((void*)0x000a064c);
 
 	printf("\n");
 	printf("Setting up device tree and boot args...");
