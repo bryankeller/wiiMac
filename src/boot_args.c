@@ -3,6 +3,7 @@
 //
 
 #include "boot_args.h"
+#include "console.h"
 #include "device_tree.h"
 #include "printf.h"
 
@@ -13,7 +14,7 @@ void set_up_boot_args() {
 
     boot_args->Version = 1;
 
-    sprintf(boot_args->CommandLine, "-v\0");
+    sprintf(boot_args->CommandLine, "-v debug=0x8\0");
 
     for (int i = 0; i < 26; i++) {
         boot_args->PhysicalDRAM[i].base = 0;
@@ -34,6 +35,13 @@ void set_up_boot_args() {
     boot_args->Video.v_width = 0;
     boot_args->Video.v_height = 0;
     boot_args->Video.v_depth = 0;
+
+//    boot_args->Video.v_baseAddr = (u32)get_xfb();
+//    boot_args->Video.v_display = 0;
+//    boot_args->Video.v_rowBytes = 4 * 640;
+//    boot_args->Video.v_width = 640;
+//    boot_args->Video.v_height = 480;
+//    boot_args->Video.v_depth = 32;
 
     boot_args->machineType = 0;
 

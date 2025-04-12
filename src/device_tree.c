@@ -172,7 +172,7 @@ void build_device_tree() {
                 add_property("reg", reg, sizeof(reg));
 
                 u32 appl_address[1] = {
-                    0x0d000000
+                    0x0c000000
                 };
                 add_property("AAPL,address", appl_address, sizeof(appl_address));
             }

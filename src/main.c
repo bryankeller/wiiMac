@@ -75,19 +75,19 @@ void hexdump(void *d, int len) {
 	}
 }
 
-static void patch_memory_trap(u32 *offset) {
-	offset[0] = 0x7FE00008; // trap
-	sync_before_exec(offset, 4);
+static void patch_memory_trap(u32 *src) {
+	src[0] = 0x7FE00008; // trap
+	sync_before_exec(src, 1 * 4);
 }
 
-static void patch_memory_syscall(u32 *offset) {
-	offset[0] = 0x44000002; // sc
-	sync_before_exec(offset, 4);
+static void patch_memory_syscall(u32 *src) {
+	src[0] = 0x44000002; // sc
+	sync_before_exec(src, 1 * 4);
 }
 
-static void patch_memory_nop(u32 *offset) {
-	offset[0] = 0x60000000; // ori, 0, 0, 0
-	sync_before_exec(offset, 4);
+static void patch_memory_nop(u32 *src) {
+	src[0] = 0x60000000; // ori, 0, 0, 0
+	sync_before_exec(src, 1 * 4);
 }
 
 static void patch_exception_handler(u32 *vector) {
@@ -118,14 +118,65 @@ static void patch_exception_handler(u32 *vector) {
 	// Infinite loop
 	vector[18] = 0x48000000;
 
-	sync_before_exec(vector, 76);
+	sync_before_exec(vector, 19 * 4);
+}
+
+static void patch_cnputc() {
+	u32 *src = (u32*)0x000e2e4c;//0x000a473c;  (vanilla)
+	u32 dst = (u32)(void*)gecko_putc;
+	u32 offset = (dst - (u32)src) & 0x03FFFFFC;
+
+	src[0] = 0x48000000 | offset; // b
+
+	sync_before_exec(src, 1 * 4);
+}
+
+static void patch_ppc_init_io_bat_setup() {
+	u32 *src = (u32*)0x000c6590; //0x0008a984; (vanilla)
+
+	// Enable IO BAT
+	src[0] = 0x4C00012C;
+	src[1] = 0x3C000C00;
+	src[2] = 0x6000002A;
+	src[3] = 0x7C1D83A6;
+	src[4] = 0x3C000C00;
+	src[5] = 0x600003FF;
+	src[6] = 0x7C1C83A6;
+	src[7] = 0x4C00012C;
+
+	// ori 0, 0, 0
+	src[8] = 0x60000000;
+	src[9] = 0x60000000;
+	src[10] = 0x60000000;
+	src[11] = 0x60000000;
+	src[12] = 0x60000000;
+	src[13] = 0x60000000;
+	src[14] = 0x60000000;
+	src[15] = 0x60000000;
+	src[16] = 0x60000000;
+	src[17] = 0x60000000;
+	src[18] = 0x60000000;
+	src[19] = 0x60000000;
+	src[20] = 0x60000000;
+	src[21] = 0x60000000;
+	src[22] = 0x60000000;
+	src[23] = 0x60000000;
+	src[24] = 0x60000000;
+	src[25] = 0x60000000;
+	src[26] = 0x60000000;
+	// src[27] = 0x60000000;
+	// src[28] = 0x60000000;
+	// src[29] = 0x60000000;
+	// src[30] = 0x60000000;
+
+	sync_before_exec(src, 27 * 4);
 }
 
 static int start_mach_kernel() {
 	long msr;
 
 	printf("\n");
-	printf("Calling Mach Kernel @ 0x%08x; boot args: 0x%08x, signature: %08x\n", kernel_entry_point, boot_args_address, kMacOSXSignature);
+	printf("Calling Mach Kernel @ 0x%08x; boot args: 0x%08x, signature: %08x\n\n", kernel_entry_point, boot_args_address, kMacOSXSignature);
 
 	msr = 0x00001000;
 	__asm__ volatile("mtmsr %0" : : "r" (msr));
@@ -155,11 +206,11 @@ int main(void) {
 	ipc_initialize();
 	ipc_slowping();
 
-	// int vmode = -1;
-	// init_fb(vmode);
-	// VIDEO_Init(vmode);
-	// VIDEO_SetFrameBuffer(get_xfb());
-	// VISetupEncoder();
+	int vmode = -1;
+	init_fb(vmode);
+	VIDEO_Init(vmode);
+	VIDEO_SetFrameBuffer(get_xfb());
+	VISetupEncoder();
 
 	printf("\n");
 	printf("wiiMac - A Mac OS X bootloader for the Nintendo Wii\n");
@@ -175,13 +226,6 @@ int main(void) {
 
 	printf("Loaded Mach Kernel\n");
 
-	// patch_exception_handler((void*)0x00000700);
-	patch_exception_handler((void*)0x00000c00);
-
-	// patch_memory_trap((void*)0x00029d14);
-	// patch_memory_trap((void*)0x000a0648);
-	// patch_memory_trap((void*)0x000a064c);
-
 	printf("\n");
 	printf("Setting up device tree and boot args...");
 
@@ -189,8 +233,27 @@ int main(void) {
 
 	printf("\n");
 	printf("Device tree:\n");
-
 	print_device_tree((void*)device_tree_start);
+
+	patch_ppc_init_io_bat_setup();
+	patch_cnputc();
+	// patch_memory_trap((void*)0x0004bdac);
+
+	// patch_exception_handler((void*)0x00000100);
+	// patch_exception_handler((void*)0x00000200);
+	patch_exception_handler((void*)0x00000300);
+	// patch_exception_handler((void*)0x00000400);
+	// patch_exception_handler((void*)0x00000500);
+	// patch_exception_handler((void*)0x00000600);
+	// patch_exception_handler((void*)0x00000700);
+	// patch_exception_handler((void*)0x00000800);
+	// patch_exception_handler((void*)0x00000900);
+	// patch_exception_handler((void*)0x00000A00);
+	// patch_exception_handler((void*)0x00000B00);
+	// patch_exception_handler((void*)0x00000C00);
+	// patch_exception_handler((void*)0x00000D00);
+	// patch_exception_handler((void*)0x00000E00);
+	// patch_exception_handler((void*)0x00000F00);
 
 	ret = start_mach_kernel();
 	if (ret != 0) {

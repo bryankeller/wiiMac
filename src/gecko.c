@@ -201,6 +201,13 @@ void gecko_init(void)
 	gecko_console_enabled = 1;
 }
 
+void gecko_putc(char c) {
+	if (c == '\r') {
+		c = '\n';
+	}
+	_gecko_sendbyte(c);
+}
+
 int printf(const char *fmt, ...) {
 	if (!gecko_console_enabled)
 		return 0;

@@ -117,6 +117,7 @@ void exception_init(void);
 // Console.
 
 void gecko_init(void);
+void gecko_putc(char c);
 int printf(const char *fmt, ...);
 void hexdump(void *d, int len);
 
