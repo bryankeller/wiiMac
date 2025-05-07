@@ -60,7 +60,7 @@ void build_device_tree() {
     // /
     create_node(/*nProps=*/4, /*nChildren=*/4);
     {
-      	const char* name = "device-tree";
+      	const char *name = "device-tree";
         add_property("name", name, strlen(name) + 1);
 
         const char *compatible = "nintendo,wii";
@@ -75,23 +75,23 @@ void build_device_tree() {
         // /chosen
         create_node(/*nProps=*/3, /*nChildren=*/0);
         {
-            const char* name = "chosen";
+            const char *name = "chosen";
             add_property("name", name, strlen(name) + 1);
 
-            const char* boot_args = "-v debug=0x02";
+            const char *boot_args = "-v debug=0x02";
             add_property("boot-args", boot_args, strlen(boot_args) + 1);
 
-            const char* rootpath = "sd";
+            const char *rootpath = "/hollywood@0c000000/sd";
             add_property("rootpath", rootpath, strlen(rootpath) + 1);
         }
 
         // /memory
         create_node(/*nProps=*/3, /*nChildren=*/0);
         {
-            const char* name = "memory";
+            const char *name = "memory";
             add_property("name", name, strlen(name) + 1);
 
-            const char* device_type = "memory";
+            const char *device_type = "memory";
             add_property("device_type", device_type, strlen(device_type) + 1);
 
             u32 reg[4] = {
@@ -104,13 +104,13 @@ void build_device_tree() {
         // /cpus
         create_node(/*nProps=*/1, /*nChildren=*/1);
         {
-            const char* name = "cpus";
+            const char *name = "cpus";
             add_property("name", name, strlen(name) + 1);
 
             // /cpus/PowerPC,750
             create_node(/*nProps=*/7, /*nChildren=*/0);
             {
-                const char* name = "PowerPC,750";
+                const char *name = "PowerPC,750";
                 add_property("name", name, strlen(name) + 1);
 
                 u32 address_cells = 1;
@@ -119,7 +119,7 @@ void build_device_tree() {
                 u32 size_cells = 0;
                 add_property("#size-cells", &size_cells, sizeof(size_cells));
 
-                const char* dtype = "cpu";
+                const char *dtype = "cpu";
                 add_property("device_type", dtype, strlen(dtype) + 1);
 
                 u32 clockFreq = 729000000; // Wii's Broadway CPU ~729MHz
@@ -139,8 +139,8 @@ void build_device_tree() {
             const char* name = "hollywood";
             add_property("name", name, strlen(name) + 1);
 
-            const char* device_type = "hollywood";
-            add_property("device_type", name, strlen(name) + 1);
+            const char *device_type = "hollywood";
+            add_property("device_type", device_type, strlen(device_type) + 1);
 
             const char *compatible = "nintendo,hollywood";
         	add_property("compatible", compatible, strlen(compatible) + 1);
@@ -159,12 +159,15 @@ void build_device_tree() {
             add_property("ranges", ranges, sizeof(ranges));
 
             // /hollywood@0c000000/sd@0d070000
-            create_node(/*nProps=*/3, /*nChildren=*/0);
+            create_node(/*nProps=*/4, /*nChildren=*/0);
             {
-              	const char* name = "sd";
-                add_property("name", name, strlen(name) + 1);
+				const char *name = "sd";
+        		add_property("name", name, strlen(name) + 1);
 
-                const char *compatible = "nintendo,sdhc";
+                const char *device_type = "sd";
+                add_property("device_type", device_type, strlen(device_type) + 1);
+
+                const char *compatible = "nintendo,hollywood-sdhci";
         		add_property("compatible", compatible, strlen(compatible) + 1);
 
                 u32 reg[2] = {

@@ -192,7 +192,7 @@ static int start_mach_kernel() {
 	long msr;
 
 	console_println("\n");
-	console_println("Calling Mach Kernel @ 0x%08x; boot args: 0x%08x, signature: %08x", kernel_entry_point, boot_args_address, kMacOSXSignature);
+	console_println("Calling Mach Kernel @ 0x%08x; boot args: 0x%08x", kernel_entry_point, boot_args_address);
 	console_println("\n");
 	console_println("\n");
 	console_println("\n");
