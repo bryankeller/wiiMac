@@ -20,4 +20,6 @@ include common.mk
 install:
 	$(DEVKITAMATEUR)/bin/bootmii -p $(TARGET)
 
-.PHONY: install
+xcoderun: clean $(TARGET) install
+
+.PHONY: install xcoderun

@@ -31,14 +31,6 @@ dist/
 .deps/
 *.elf.map
 
-# Ignore CMake-generated files
-CMakeFiles/
-CMakeCache.txt
-cmake_install.cmake
-
-# Ignore Visual Studio Code configuration (if used)
-.vscode/
-
-# Ignore Xcode project files (if applicable)
-*.xcodeproj/
-*.xcworkspace/
+# Ignore Xcode files
+*.xcuserstate
+UserInterfaceState.xcuserstate
