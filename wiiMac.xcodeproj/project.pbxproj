@@ -31,11 +31,11 @@
 			isa = PBXGroup;
 			children = (
 				935FF3A92E23E8B20034C90A /* bin */,
+				935FF3FC2E23E8B20034C90A /* src */,
 				935FF3AA2E23E8B20034C90A /* broadway.mk */,
 				935FF3AB2E23E8B20034C90A /* common.mk */,
 				935FF3AC2E23E8B20034C90A /* Makefile */,
 				935FF3AD2E23E8B20034C90A /* mini.ld */,
-				935FF3FC2E23E8B20034C90A /* src */,
 			);
 			sourceTree = "<group>";
 		};

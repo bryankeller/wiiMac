@@ -25,7 +25,7 @@ void set_up_boot_args() {
     boot_args->PhysicalDRAM[0].base = 0x00000000;
     boot_args->PhysicalDRAM[0].size = 24 * 1024 * 1024;
 
-    // MEM2 64MB @0x10000000
+    // MEM2 52MB @0x10000000
     boot_args->PhysicalDRAM[1].base = 0x10000000;
     boot_args->PhysicalDRAM[1].size = 52 * 1024 * 1024; // 52MB MEM2 (upper 12MB used for IOS?)
 
