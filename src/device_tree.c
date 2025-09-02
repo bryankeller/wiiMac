@@ -93,7 +93,7 @@ void build_device_tree() {
             add_property("name", name, strlen(name) + 1);
 
       	    // /chosen/memory-map
-      	    create_node(/*nProps=*/7, /*nChildren=*/0);
+      	    create_node(/*nProps=*/8, /*nChildren=*/0);
       	    {
                 const char* name = "memory-map";
                 add_property("name", name, strlen(name) + 1);
@@ -127,6 +127,11 @@ void build_device_tree() {
                     boot_args_address, boot_args_size
                 };
                 add_property("BootArgs", boot_args, sizeof(boot_args));
+              
+              u32 framebuffer[2] = {
+                0x01600000, 0x00200000
+              };
+              add_property("framebuffer", framebuffer, sizeof(framebuffer));
             }
         }
 
@@ -141,7 +146,7 @@ void build_device_tree() {
 
             // I don't think this is used or looked at, and might just be used in an OF Fourth environment
             u32 reg[4] = {
-                0x00000000, 0x01600000, // 22 MB MEM1 (upper 1 MB used for frame buffer, but 23 MB crashes)
+                0x00000000, 0x01600000, // 22 MB MEM1 (upper 2 MB used for frame buffers (real YUV and RGB shadow))
                 0x10000000, 0x03400000  // 52 MB MEM2 (upper 12 MB used for IOS?)
             };
             add_property("reg", reg, sizeof(reg));

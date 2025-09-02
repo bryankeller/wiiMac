@@ -23,7 +23,7 @@ void set_up_boot_args() {
 
     // MEM1 22 MB @0x00000000
     boot_args->PhysicalDRAM[0].base = 0x00000000;
-    boot_args->PhysicalDRAM[0].size = 22 * 1024 * 1024; // 22 MB MEM1 (upper 1 MB used for frame buffer, but 23 MB crashes)
+    boot_args->PhysicalDRAM[0].size = 22 * 1024 * 1024; // 22 MB MEM1 (upper 2 MB used for frame buffers (real YUV and RGB shadow))
 
     // MEM2 52 MB @0x10000000
     boot_args->PhysicalDRAM[1].base = 0x10000000;
