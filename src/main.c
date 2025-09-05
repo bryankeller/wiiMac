@@ -78,12 +78,6 @@ void hexdump(void *d, int len) {
 static int start_mach_kernel() {
 	long msr;
 
-	console_println("\n");
-	console_println("Calling Mach Kernel @ 0x%08x; boot args: 0x%08x", kernel_entry_point, boot_args_address);
-	console_println("\n");
-	console_println("\n");
-	console_println("\n");
-
 	msr = 0x00001000;
 	__asm__ volatile("mtmsr %0" : : "r" (msr));
 	__asm__ volatile("isync");
@@ -141,7 +135,12 @@ int main(void) {
   
   printf("\n");
   printf("Top of kernel data: %08x\n", ((boot_args_t*)boot_args_address)->topOfKernelData);
-
+  
+  console_println("");
+  console_println("Calling Mach Kernel @ 0x%08x; boot args: 0x%08x", kernel_entry_point, boot_args_address);
+  
+  udelay(1000000);
+  draw_screen_for_graphical_boot();
 
 	if (start_mach_kernel() != 0) {
 		return -1;

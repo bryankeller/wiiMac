@@ -30,7 +30,7 @@ void set_up_boot_args() {
     boot_args->PhysicalDRAM[1].size = 52 * 1024 * 1024; // 52 MB MEM2 (upper 12 MB used for IOS?)
 
     boot_args->Video.v_baseAddr = (u32)get_xfb();
-    boot_args->Video.v_display = 0;
+    boot_args->Video.v_display = 1;
     boot_args->Video.v_rowBytes = 2 * 640;
     boot_args->Video.v_width = 640;
     boot_args->Video.v_height = 480;

@@ -10,7 +10,7 @@
 #define boot_args_address (0x00700000) // @ 7 MB
 #define boot_args_size (0x000001fc)
 
-const char boot_args_command_line[] = "-v rd=disk0s4";
+const char boot_args_command_line[] = "rd=disk0s4";
 
 /*
  * Video information..
