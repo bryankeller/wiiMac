@@ -123,7 +123,7 @@ void build_device_tree() {
     }
     
     // /hollywood
-    create_node(/*nProps=*/6, /*nChildren=*/3);
+    create_node(/*nProps=*/6, /*nChildren=*/4);
     {
       const char* name = "hollywood";
       add_property("name", name, strlen(name) + 1);
@@ -222,6 +222,48 @@ void build_device_tree() {
         u32 interrupt_parent = 0xFEAD0001;
         add_property("interrupt-parent", &interrupt_parent, sizeof(interrupt_parent));
       }
+      
+      // /hollywood/usb@0d050000
+      create_node(/*nProps=*/5, /*nChildren=*/0);
+      {
+        const char *name = "usb-ohci";
+        add_property("name", name, strlen(name) + 1);
+        
+        const char *compatible = "nintendo,hollywood-usb-ohci";
+        add_property("compatible", compatible, strlen(compatible) + 1);
+        
+        u32 reg[2] = {
+          0x0d050000, 0x00000200
+        };
+        add_property("reg", reg, sizeof(reg));
+        
+        u32 interrupts = 5;
+        add_property("interrupts", &interrupts, sizeof(interrupts));
+        
+        u32 interrupt_parent = 0xFEAD0001;
+        add_property("interrupt-parent", &interrupt_parent, sizeof(interrupt_parent));
+      }
+      
+//      // /hollywood/usb@0d060000
+//      create_node(/*nProps=*/5, /*nChildren=*/0);
+//      {
+//        const char *name = "usb-ohci";
+//        add_property("name", name, strlen(name) + 1);
+//        
+//        const char *compatible = "nintendo,hollywood-usb-ohci";
+//        add_property("compatible", compatible, strlen(compatible) + 1);
+//        
+//        u32 reg[2] = {
+//          0x0d060000, 0x00000200
+//        };
+//        add_property("reg", reg, sizeof(reg));
+//        
+//        u32 interrupts = 6;
+//        add_property("interrupts", &interrupts, sizeof(interrupts));
+//        
+//        u32 interrupt_parent = 0xFEAD0001;
+//        add_property("interrupt-parent", &interrupt_parent, sizeof(interrupt_parent));
+//      }
     }
     
     // /chosen
