@@ -102,6 +102,7 @@ int main(void) {
 	irq_initialize();
 	irq_bw_enable(BW_PI_IRQ_RESET);
 	irq_bw_enable(BW_PI_IRQ_HW); //hollywood pic
+//  irq_bw_enable(BW_PI_IRQ_VI);
 
 	ipc_initialize();
 	ipc_slowping();

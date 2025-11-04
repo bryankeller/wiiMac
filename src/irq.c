@@ -63,6 +63,14 @@ void irq_handler(void)
 		write32(BW_PI_IRQFLAG, 1<<BW_PI_IRQ_RESET);
 		boot2_run(1,2); //sysmenu
 	}
+  
+  if (flags & (1<<BW_PI_IRQ_VI)) {
+//    printf("1 BW_PI_IRQ_VI: %08x\n", read32(0x0c002030));
+    
+    mask32(0x0c002030, 1 << 31, 0); // clear INT status (write to clear)
+    mask32(0x0c002030, 1 << 28, 0); //clear ENB (0 to disable)
+    write32(BW_PI_IRQFLAG, 1 << BW_PI_IRQ_VI);
+  }
 
 	if (flags & (1<<BW_PI_IRQ_HW)) { //HW-PIC IRQ
 		u32 hw_enabled = read32(HW_PPCIRQMASK);
