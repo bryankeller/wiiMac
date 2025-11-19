@@ -28,20 +28,6 @@ void irq_initialize(void)
 	write32(HW_PPCIRQMASK, 0);
 	write32(HW_PPCIRQFLAG, 0xffffffff);
 
-	/* ??? -- needed?!
-	 * in mini they do
-	 *
-	 * write32(HW_ARMIRQMASK+0x04, 0);
-	 * write32(HW_ARMIRQMASK+0x20, 0);
-	 *
-	 *
-	 * may it's here following; on the other 
-	 * hand it's already done by mini...
-	 *
-	 * write32(HW_PPCIRQMASK+0x04+0x08, 0);
-	 * write32(HW_PPCIRQMASK+0x20+0x08, 0);
-	 */
-
 	_CPU_ISR_Enable()
 }
 
@@ -54,91 +40,137 @@ void irq_shutdown(void)
 
 void irq_handler(void)
 {
-	u32 enabled = read32(BW_PI_IRQMASK);
-	u32 flags = read32(BW_PI_IRQFLAG);
-
-	flags = flags & enabled;
-
-	if (flags & (1<<BW_PI_IRQ_RESET)) { 
-		write32(BW_PI_IRQFLAG, 1<<BW_PI_IRQ_RESET);
-		boot2_run(1,2); //sysmenu
-	}
+	u32 bw_mask = read32(BW_PI_IRQMASK);
+	u32 bw_flags = read32(BW_PI_IRQFLAG);
+  u32 bw_pending = bw_flags & bw_mask;
   
-  if (flags & (1<<BW_PI_IRQ_VI)) {
-//    printf("1 BW_PI_IRQ_VI: %08x\n", read32(0x0c002030));
+  int bw_irq = 0;
+  while (bw_pending) {
+    if (bw_pending & 0x1) {
+      printf("BW IRQ: %d\n", bw_irq);
+      switch (bw_irq) {
+        case BW_PI_IRQ_RESET:
+          break;
+          
+        case BW_PI_IRQ_DI:
+          break;
+          
+        case BW_PI_IRQ_SI:
+          break;
+          
+        case BW_PI_IRQ_EXI:
+          break;
+          
+        case BW_PI_IRQ_AI:
+          break;
+          
+        case BW_PI_IRQ_DSP:
+          break;
+          
+        case BW_PI_IRQ_MEM:
+          break;
+          
+        case BW_PI_IRQ_VI:
+          write32(0x0c002030, read32(0x0c002030) & ~(1 << 31));
+          break;
+          
+        case BW_PI_IRQ_PE_TOKEN:
+          break;
+          
+        case BW_PI_IRQ_PE_FINISH:
+          break;
+          
+        case BW_PI_IRQ_CP:
+          break;
+          
+        case BW_PI_IRQ_DEBUG:
+          break;
+          
+        case BW_PI_IRQ_HSP:
+          break;
+          
+        case BW_PI_IRQ_HW:
+          hollywood_irq_handler();
+          break;
+          
+        default:
+          break;
+      }
+      
+      // Ack by writing 1
+      write32(BW_PI_IRQFLAG, 1 << bw_irq);
+    }
     
-    mask32(0x0c002030, 1 << 31, 0); // clear INT status (write to clear)
-    mask32(0x0c002030, 1 << 28, 0); //clear ENB (0 to disable)
-    write32(BW_PI_IRQFLAG, 1 << BW_PI_IRQ_VI);
+    bw_pending = bw_pending >> 1;
+    bw_irq += 1;
   }
+}
 
-	if (flags & (1<<BW_PI_IRQ_HW)) { //HW-PIC IRQ
-		u32 hw_enabled = read32(HW_PPCIRQMASK);
-		u32 hw_flags = read32(HW_PPCIRQFLAG);
-
-		//printf("In IRQ handler: 0x%08x 0x%08x 0x%08x\n", hw_enabled, hw_flags, hw_flags & hw_enabled);
-
-		hw_flags = hw_flags & hw_enabled;
-
-		if(hw_flags & IRQF_TIMER) {
-			write32(HW_PPCIRQFLAG, IRQF_TIMER);
-		}
-		if(hw_flags & IRQF_NAND) {
-			//		printf("IRQ: NAND\n");
-			// hmmm... should be done by mini?
-			write32(NAND_CMD, 0x7fffffff); // shut it up
-			write32(HW_PPCIRQFLAG, IRQF_NAND);
-			//nand_irq();
-		}
-		if(hw_flags & IRQF_GPIO1B) {
-			//		printf("IRQ: GPIO1B\n");
-			// hmmm... should be done by mini?
-			write32(HW_GPIO1BINTFLAG, 0xFFFFFF); // shut it up
-			write32(HW_PPCIRQFLAG, IRQF_GPIO1B);
-		}
-		if(hw_flags & IRQF_GPIO1) {
-			//		printf("IRQ: GPIO1\n");
-			// hmmm... should be done by mini?
-			write32(HW_GPIO1INTFLAG, 0xFFFFFF); // shut it up
-			write32(HW_PPCIRQFLAG, IRQF_GPIO1);
-		}
-		if(hw_flags & IRQF_RESET) {
-			//		printf("IRQ: RESET\n");
-			write32(HW_PPCIRQFLAG, IRQF_RESET);
-		}
-		if(hw_flags & IRQF_IPC) {
-			//printf("IRQ: IPC\n");
-			//not necessary here?
-			//ipc_irq();
-			write32(HW_PPCIRQFLAG, IRQF_IPC);
-		}
-		if(hw_flags & IRQF_AES) {
-			//		printf("IRQ: AES\n");
-			write32(HW_PPCIRQFLAG, IRQF_AES);
-		}
-		if (hw_flags & IRQF_SDHC) {
-			//		printf("IRQ: SDHC\n");
-			write32(HW_PPCIRQFLAG, IRQF_SDHC);
-			//sdhc_irq();
-		}
-		if (hw_flags & IRQF_OHCI0) {
-			hcdi_irq(OHCI0_REG_BASE);
-			write32(HW_PPCIRQFLAG, IRQF_OHCI0);
-		}
-		if (hw_flags & IRQF_OHCI1) {
-			hcdi_irq(OHCI1_REG_BASE);
-			write32(HW_PPCIRQFLAG, IRQF_OHCI1);
-		}
-
-		hw_flags &= ~IRQF_ALL;
-		if(hw_flags) {
-			printf("IRQ: unknown 0x%08x\n", hw_flags);
-			write32(HW_PPCIRQFLAG, hw_flags);
-		}
-
-		// not necessary here, but "cleaner"?
-		write32(BW_PI_IRQFLAG, 1<<BW_PI_IRQ_HW);
-	}
+void hollywood_irq_handler()
+{
+  u32 hw_mask = read32(HW_PPCIRQMASK);
+  u32 hw_flags = read32(HW_PPCIRQFLAG);
+  u32 hw_pending = hw_flags & hw_mask;
+  
+  int hw_irq = 0;
+  while (hw_pending) {
+    if (hw_pending & 0x1) {
+      printf("HW IRQ: %d\n", hw_irq);
+      switch (hw_irq) {
+        case IRQ_TIMER:
+          break;
+          
+        case IRQ_NAND:
+          break;
+          
+        case IRQ_AES:
+          break;
+          
+        case IRQ_SHA1:
+          break;
+          
+        case IRQ_EHCI:
+          break;
+          
+        case IRQ_OHCI0:
+          hcdi_irq(OHCI0_REG_BASE);
+          break;
+          
+        case IRQ_OHCI1:
+          break;
+          
+        case IRQ_SDHC:
+          break;
+          
+        case IRQ_WIFI:
+          break;
+          
+        case IRQ_GPIO1B:
+          break;
+          
+        case IRQ_GPIO1:
+          break;
+          
+        case IRQ_RESET:
+          break;
+          
+        case IRQ_PPCIPC:
+          break;
+          
+        case IRQ_IPC:
+          break;
+          
+        default:
+          break;
+      }
+      
+      // Ack by writing 1
+      write32(HW_PPCIRQFLAG, 1 << hw_irq);
+    }
+    
+    hw_pending = hw_pending >> 1;
+    hw_irq += 1;
+  }
 }
 
 void irq_bw_enable(u32 irq)
@@ -153,6 +185,12 @@ void irq_bw_disable(u32 irq) {
 void irq_hw_enable(u32 irq)
 {
 	set32(HW_PPCIRQMASK, 1<<irq);
+  
+  // Mask and clear Starlet interrupt
+  u32 hw_mask = read32(HW_ARMIRQMASK);
+  hw_mask &= ~(1<<irq);
+  write32(HW_ARMIRQMASK, hw_mask);
+  write32(HW_ARMIRQFLAG, 1<<irq);
 }
 
 void irq_hw_disable(u32 irq)
@@ -168,6 +206,6 @@ u32 irq_kill() {
 
 void irq_restore(u32 cookie) {
 	_CPU_ISR_Restore(cookie);
-	_CPU_ISR_Enable(); //wtf :/
+//	_CPU_ISR_Enable(); //wtf :/
 }
 

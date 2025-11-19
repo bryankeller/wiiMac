@@ -23,32 +23,18 @@ void exception_handler(int exception)
 	u32 cookie = irq_kill();
 	// check if the exception was actually an external interrupt
 	if (exception == 0x500) {
-		printf("\nExternal interrupt (0x500)\n");
+//		printf("\nExternal interrupt (0x500)\n");
 		irq_handler();
 	}
-
 	// check if exception happened due to the decrementer
 	else if (exception == 0x900) {
 		printf("\nDecrementer exception occured - who cares?\n");
 	}
-
 	else {
 		u32 *x;
 		u32 i;
 
 		printf("\nException %04X occurred!\n", exception);
-
-		if (exception == 0x700) {
-			__asm__(
-				"lis 5,0x0d80\n\t"
-				"ori 5,5,0x00c0\n\t"
-				"lwz 4,0(5)\n\t"
-				"sync\n\t"
-				"xori 4,4,0x20\n\t"
-				"stw  4,0(5)\n\t"
-				"eieio\n\t"
-			);
-		}
 
 		x = (u32 *)0x00002000;
 

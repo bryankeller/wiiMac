@@ -110,6 +110,7 @@ void irq_initialize(void);
 void irq_shutdown(void);
 
 void irq_handler(void);
+void hollywood_irq_handler(void);
 
 void irq_bw_enable(u32 irq);
 void irq_bw_disable(u32 irq);
