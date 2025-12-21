@@ -25,9 +25,9 @@ void set_up_boot_args() {
     boot_args->PhysicalDRAM[0].base = 0x00000000;
     boot_args->PhysicalDRAM[0].size = 22 * 1024 * 1024; // 22 MB MEM1 (upper 2 MB used for frame buffers (real YUV and RGB shadow))
 
-    // MEM2 52 MB @0x10000000
+    // MEM2 56 MB @0x10000000
     boot_args->PhysicalDRAM[1].base = 0x10000000;
-    boot_args->PhysicalDRAM[1].size = 52 * 1024 * 1024; // 52 MB MEM2 (upper 12 MB used for IOS?)
+    boot_args->PhysicalDRAM[1].size = 56 * 1024 * 1024; // 55 MB MEM2 (upper 7 + 1 MB used by DMA allocator + MINI)
 
     boot_args->Video.v_baseAddr = (u32)get_xfb();
     boot_args->Video.v_display = 0;

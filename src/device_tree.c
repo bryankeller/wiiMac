@@ -123,7 +123,7 @@ void build_device_tree() {
     }
     
     // /hollywood
-    create_node(/*nProps=*/6, /*nChildren=*/4);
+    create_node(/*nProps=*/6, /*nChildren=*/6);
     {
       const char* name = "hollywood";
       add_property("name", name, strlen(name) + 1);
@@ -143,9 +143,30 @@ void build_device_tree() {
       u32 ranges[9] = {
         0x0c000000, 0x0c000000, 0x01000000,
         0x0d000000, 0x0d000000, 0x00800000,
-        0x0d800000, 0x0d800000, 0x00800000
+        0x0d800000, 0x0d800000, 0x00800000,
       };
       add_property("ranges", ranges, sizeof(ranges));
+      
+      // /hollywood/video@0c002000
+      create_node(/*nProps=*/5, /*nChildren=*/0);
+      {
+        const char *name = "video";
+        add_property("name", name, strlen(name) + 1);
+        
+        const char *compatible = "nintendo,hollywood-vi";
+        add_property("compatible", compatible, strlen(compatible) + 1);
+        
+        u32 reg[2] = {
+          0x0c002000, 0x100
+        };
+        add_property("reg", reg, sizeof(reg));
+        
+        u32 interrupts = 8;
+        add_property("interrupts", &interrupts, sizeof(interrupts));
+        
+        u32 interrupt_parent = 0xFEAD0000;
+        add_property("interrupt-parent", &interrupt_parent, sizeof(interrupt_parent));
+      }
       
       // /hollywood/pic0@0c003000
       create_node(/*nProps=*/6, /*nChildren=*/0);
@@ -168,6 +189,78 @@ void build_device_tree() {
         add_property("AAPL,phandle", &phandle, sizeof(phandle));
         
         add_property("interrupt-controller", NULL, 0);
+      }
+      
+      // /hollywood/usb@0d040000
+      create_node(/*nProps=*/5, /*nChildren=*/0);
+      {
+        const char *name = "ehci";
+        add_property("name", name, strlen(name) + 1);
+        
+        const char *compatible = "nintendo,hollywood-usb-ehci";
+        add_property("compatible", compatible, strlen(compatible) + 1);
+        
+        u32 reg[2] = {
+          0x0d040000, 0x00000100
+        };
+        add_property("reg", reg, sizeof(reg));
+        
+        u32 interrupts = 4;
+        add_property("interrupts", &interrupts, sizeof(interrupts));
+        
+        u32 interrupt_parent = 0xFEAD0001;
+        add_property("interrupt-parent", &interrupt_parent, sizeof(interrupt_parent));
+      }
+      
+      // /hollywood/ohci@0d050000
+      create_node(/*nProps=*/8, /*nChildren=*/0);
+      {
+        const char *name = "ohci";
+        add_property("name", name, strlen(name) + 1);
+        
+        const char *compatible = "nintendo,hollywood-usb-ohci";
+        add_property("compatible", compatible, strlen(compatible) + 1);
+        
+        u32 reg[2] = {
+          0x0d050000, 0x00000200
+        };
+        add_property("reg", reg, sizeof(reg));
+        
+        u32 interrupts = 5;
+        add_property("interrupts", &interrupts, sizeof(interrupts));
+        
+        u32 interrupt_parent = 0xFEAD0001;
+        add_property("interrupt-parent", &interrupt_parent, sizeof(interrupt_parent));
+        
+        u16 device_id = 0x1110;
+        add_property("device-id", &device_id, sizeof(device_id));
+        
+        u16 vendor_id = 0x2220;
+        add_property("vendor-id", &vendor_id, sizeof(vendor_id));
+        
+        u8 revision_id = 0x33;
+        add_property("revision-id", &revision_id, sizeof(revision_id));
+      }
+      
+      // /hollywood/sdhc@0d070000
+      create_node(/*nProps=*/5, /*nChildren=*/0);
+      {
+        const char *name = "sdhc";
+        add_property("name", name, strlen(name) + 1);
+        
+        const char *compatible = "nintendo,hollywood-sdhci";
+        add_property("compatible", compatible, strlen(compatible) + 1);
+        
+        u32 reg[2] = {
+          0x0d070000, 0x00000200,
+        };
+        add_property("reg", reg, sizeof(reg));
+        
+        u32 interrupts = 7;
+        add_property("interrupts", &interrupts, sizeof(interrupts));
+        
+        u32 interrupt_parent = 0xFEAD0001;
+        add_property("interrupt-parent", &interrupt_parent, sizeof(interrupt_parent));
       }
       
       // /hollywood/pic1@0d800030
@@ -197,51 +290,6 @@ void build_device_tree() {
         
         u32 interrupts = 14;
         add_property("interrupts", &interrupts, sizeof(interrupts));
-      }
-      
-      // /hollywood/sd@0d070000
-      create_node(/*nProps=*/6, /*nChildren=*/0);
-      {
-        const char *name = "sd";
-        add_property("name", name, strlen(name) + 1);
-        
-        const char *device_type = "sd";
-        add_property("device_type", device_type, strlen(device_type) + 1);
-        
-        const char *compatible = "nintendo,hollywood-sdhci";
-        add_property("compatible", compatible, strlen(compatible) + 1);
-        
-        u32 reg[2] = {
-          0x0d070000, 0x00000200
-        };
-        add_property("reg", reg, sizeof(reg));
-        
-        u32 interrupts = 7;
-        add_property("interrupts", &interrupts, sizeof(interrupts));
-
-        u32 interrupt_parent = 0xFEAD0001;
-        add_property("interrupt-parent", &interrupt_parent, sizeof(interrupt_parent));
-      }
-      
-      // /hollywood/usb@0d050000
-      create_node(/*nProps=*/5, /*nChildren=*/0);
-      {
-        const char *name = "usb";
-        add_property("name", name, strlen(name) + 1);
-        
-        const char *compatible = "nintendo,hollywood-usb-ohci";
-        add_property("compatible", compatible, strlen(compatible) + 1);
-        
-        u32 reg[2] = {
-          0x0d050000, 0x00000200
-        };
-        add_property("reg", reg, sizeof(reg));
-        
-        u32 interrupts = 5;
-        add_property("interrupts", &interrupts, sizeof(interrupts));
-        
-        u32 interrupt_parent = 0xFEAD0001;
-        add_property("interrupt-parent", &interrupt_parent, sizeof(interrupt_parent));
       }
     }
     

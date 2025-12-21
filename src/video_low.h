@@ -32,7 +32,7 @@ of Crazy Nation and the GC Linux project.
 #define R_VIDEO_HALFLINE_1           (MEM_VIDEO_BASE+0x2C)   ///< HalfLine1 register location.
 #define R_VIDEO_HALFLINE_2           (MEM_VIDEO_BASE+0x2E)   ///< HalfLine2 register location.
 #define R_VIDEO_STATUS               (MEM_VIDEO_BASE+0x6C)   ///< VideoStatus register location.
-#define R_VIDEO_VISEL                (MEM_VIDEO_BASE+0x6E)   // cable detect
+#define R_VIDEO_VISEL                (MEM_VIDEO_BASE+0x6E)   ///< cable detect
 
 // Constants for VIDEO_Init()
 #define VIDEO_640X480_NTSCi_YUV16    (0)

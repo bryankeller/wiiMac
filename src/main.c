@@ -76,20 +76,20 @@ void hexdump(void *d, int len) {
 }
 
 static int start_mach_kernel() {
-	long msr;
-
-	msr = 0x00001000;
-	__asm__ volatile("mtmsr %0" : : "r" (msr));
-	__asm__ volatile("isync");
-
-	// Make sure everything get sync'd up.
-	__asm__ volatile("isync");
-	__asm__ volatile("sync");
-	__asm__ volatile("eieio");
-
-	(*(void (*)())kernel_entry_point)(boot_args_address, kMacOSXSignature);
-
-	return -1;
+  long msr;
+  
+  msr = 0x00001000;
+  __asm__ volatile("mtmsr %0" : : "r" (msr));
+  __asm__ volatile("isync");
+  
+  // Make sure everything get sync'd up.
+  __asm__ volatile("isync");
+  __asm__ volatile("sync");
+  __asm__ volatile("eieio");
+  
+  (*(void (*)())kernel_entry_point)(boot_args_address, kMacOSXSignature);
+  
+  return -1;
 }
 
 int main(void) {
@@ -101,7 +101,7 @@ int main(void) {
 
 	irq_initialize();
 	irq_bw_enable(BW_PI_IRQ_RESET);
-	irq_bw_enable(BW_PI_IRQ_HW); //hollywood pic
+	irq_bw_enable(BW_PI_IRQ_HW);
   irq_hw_enable(IRQ_RESET);
 
 	ipc_initialize();
@@ -112,24 +112,13 @@ int main(void) {
 	VIDEO_Init(vmode);
 	VIDEO_SetFrameBuffer(get_xfb());
 	VISetupEncoder();
-  
-//  // Clear and disable all 4 display interrupt
-//  write32(0x0c002030, 0);
-//  write32(0x0c002034, 0);
-//  write32(0x0c002038, 0);
-//  write32(0x0c00203c, 0);
-//  
-//  // Configure and enable first display interrupt
-//  write32(0x0c002030, 0x90010001);
-//
-//  irq_bw_enable(BW_PI_IRQ_VI);
 
 	console_println("wiiMac - A Mac OS X bootloader for the Nintendo Wii");
 	console_println("(c) 2025 Bryan Keller - @blk19_");
 	console_println("");
   
-  // Zero all memory leading up to the file load address, without clobbering exception handlers
-  memset((void*)0x3000, 0, kernel_file_load_address - 0x3000);
+  // Zero all memory leading up to the file load address
+  memset((void*)0x2FF, 0, kernel_file_load_address - 0x2FF);
 
 	if (load_mach_kernel("/mk") != 0) {
 		return -1;
@@ -160,4 +149,3 @@ int main(void) {
 
   return 0;
 }
-
