@@ -13,7 +13,6 @@ Copyright (C) 2009		Sebastian Falbesoner <sebastian.falbesoner@gmail.com>
 #include "hollywood.h"
 #include "ipc.h"
 #include "bootmii_ppc.h"
-#include "usb/host/host.h"
 #include "mini_ipc.h"
 
 void show_frame_no(void);
@@ -133,7 +132,6 @@ void hollywood_irq_handler()
           break;
           
         case IRQ_OHCI0:
-          hcdi_irq(OHCI0_REG_BASE);
           break;
           
         case IRQ_OHCI1:
