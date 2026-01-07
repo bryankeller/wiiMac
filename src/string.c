@@ -52,6 +52,16 @@ void *memcpy(void *dst, const void *src, size_t len)
 	return dst;
 }
 
+void bcopy(const void *src, void *dst, size_t len)
+{
+  memcpy(dst, src, len);
+}
+
+void bzero(void *dst, size_t len)
+{
+  memset(dst, 0, len);
+}
+
 int memcmp(const void *s1, const void *s2, size_t len)
 {
 	size_t i;
@@ -96,6 +106,15 @@ size_t strlcpy(char *dest, const char *src, size_t maxlen)
 	dest[len]='\0';
 
 	return needed-1;
+}
+
+char *
+strncpy(char * s1, const char * s2, size_t n)
+{
+  register char *ret = s1;
+  while (n && (*s1++ = *s2++))
+    n--;
+  return ret;
 }
 
 size_t strlcat(char *dest, const char *src, size_t maxlen)

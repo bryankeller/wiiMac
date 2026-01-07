@@ -57,5 +57,21 @@ typedef unsigned long	DWORD;
 /* Boolean type */
 typedef enum { FALSE = 0, TRUE } BOOL;
 
+/* HFS compatibility */
+typedef enum { false = 0, true } bool;
+typedef u8 u_int8_t;
+typedef u8 uint8_t;
+typedef u8 u_char;
+typedef u16 u_int16_t;
+typedef u16 UInt16;
+typedef u32 u_int32_t;
+typedef u32 uint32_t;
+typedef u32 UInt32;
+typedef u64 u_int64_t;
+typedef u64 uint64_t;
+typedef s8 int8_t;
+typedef s16 int16_t;
+typedef s32 int32_t;
+
 #endif
 

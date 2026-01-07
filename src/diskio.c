@@ -62,7 +62,7 @@ DRESULT disk_read (BYTE drv, BYTE *buff, DWORD sector, u32 count)
 	DRESULT res;
 	(void) drv;
 
-	if (count > 1 && ((u32) buff % 64) == 0) {
+	if (count > 1 && count <= 512 && ((u32) buff % 64) == 0) {
 		if (sd_read(sector, count, buff) != 0)
 			return RES_ERROR;
 		return RES_OK;

@@ -32,7 +32,7 @@ bin/%.o: src/%.c
 	@mkdir -p $(DEPDIR)
 	@$(CC) $(CFLAGS) $(DEFINES) -Wp,-MMD,$(DEPDIR)/$(*F).d,-MQ,"$@",-MP -c $< -o $@
 
-src/usb/%.o: src/usb/%.c
+src/hfs/%.o: src/hfs/%.c
 	@echo "  COMPILE   $<"
 	@mkdir -p $(DEPDIR)
 	@$(CC) $(CFLAGS) $(DEFINES) -Wp,-MMD,$(DEPDIR)/$(*F).d,-MQ,"$@",-MP -c $< -o $@
