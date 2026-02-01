@@ -5,6 +5,12 @@
 #ifndef MACHO_H
 #define MACHO_H
 
+#define kLoadAddr       (0x00c00000) // @ 12 MB
+#define kLoadSize       (0x00800000)
+
+#define kHeaderAddr (0x00500000) // @ 5 MB
+#define kSymtabAddr (0x00600000) // @ 6 MB
+
 u32 kernel_entry_point;
 
 u32 kernel_header_size;

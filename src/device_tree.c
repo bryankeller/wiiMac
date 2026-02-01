@@ -7,7 +7,6 @@
 #include "device_tree.h"
 #include "macho.h"
 #include "string.h"
-#include "hfs/sl.h"
 
 struct DTProperty {
   char name[32];                        // NUL terminated property name

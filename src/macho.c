@@ -7,7 +7,6 @@
 #include "macho.h"
 #include "string.h"
 #include "types.h"
-#include "hfs/sl.h"
 
 #define LC_SEGMENT 1
 #define LC_SYMTAB 2

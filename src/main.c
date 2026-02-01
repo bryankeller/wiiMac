@@ -32,7 +32,6 @@ Copyright (C) 2025              Bryan Keller <kellerbryan19@gmail.com>
 #include "sha1.h"
 #include "hollywood.h"
 #include "apm.h"
-#include "hfs/sl.h"
 
 #define MINIMUM_MINI_VERSION 0x00010003
 #define kMacOSXSignature 0x4D4F5358
@@ -44,7 +43,6 @@ static int selected_partition = -1;
 static bool loading_kernel = false;
 static bool kernel_load_failed = false;
 static bool loaded_kernel = false;
-static CICell ih = 0;
 static int autoboot_ms = -1;
 static int autoboot_ms_threshold = 10000;
 
@@ -156,12 +154,11 @@ static void redraw_screen() {
 
     apm_entry_t partition = found_partitions[i];
     long long partitionOffset = (long long)partition.startingSector * 512;
-    SetBasePosition(partitionOffset);
-    ih++; // change ih each time so HFS code never short-circuits
-    HFSInitPartition(ih);
-    u_char *partitionName = HFSGetPartitionName(ih);
-    
-    console_println("%c %d: %s     %s", partition_index == partition_number ? '*' : ' ', partition_index, partition.type, partitionName);
+//    SetBasePosition(partitionOffset);
+//    HFSInitPartition();
+//    u_char *partitionName = HFSGetPartitionName();
+//    
+//    console_println("%c %d: %s     %s", partition_index == partition_number ? '*' : ' ', partition_index, partition.type, partitionName);
   }
   
   if (autoboot_ms != -1) {
@@ -265,18 +262,17 @@ int main(void) {
       redraw_screen();
       apm_entry_t partition = found_partitions[selected_partition];
       long long partitionOffset = (long long)partition.startingSector * 512;
-      SetBasePosition(partitionOffset);
+//      SetBasePosition(partitionOffset);
       printf("Load mach_kernel from offset: %lu\n", partitionOffset);
-      ih++; // change ih each time so HFS code never short-circuits
-      if (HFSLoadFile(ih, "\\mach_kernel") > 0) {
-        printf("Loaded mach_kernel\n");
-        // Zero all memory leading up to the file load address
-        memset((void*)0x2FF, 0, kLoadAddr - 0x2FF);
-        if (load_mach_kernel() == 0) {
-          printf("Loaded mach_kernel\n");
-          loaded_kernel = true;
-        }
-      }
+//      if (HFSLoadFile("\\mach_kernel") > 0) {
+//        printf("Loaded mach_kernel\n");
+//        // Zero all memory leading up to the file load address
+//        memset((void*)0x2FF, 0, kLoadAddr - 0x2FF);
+//        if (load_mach_kernel() == 0) {
+//          printf("Loaded mach_kernel\n");
+//          loaded_kernel = true;
+//        }
+//      }
       
       if (!loaded_kernel) {
         printf("Failed to load mach_kernel\n");
