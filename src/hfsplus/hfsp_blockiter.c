@@ -25,15 +25,12 @@
  * $Id: blockiter.c,v 1.2 2000/10/17 05:58:46 hasi Exp $
  */
 
-#include "config.h"
 #include "libhfsp.h"
 #include "blockiter.h"
 #include "volume.h"
 #include "record.h"
 #include "btree.h"
-#include "os.h"
 #include "swab.h"
-#include "hfstime.h"
 
 /* Initialize iterator for a given fork */
 void

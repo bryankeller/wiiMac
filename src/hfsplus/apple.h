@@ -109,3 +109,9 @@ typedef struct {
 # define HFS_FNDR_HASBUNDLE             (1 << 13)
 # define HFS_FNDR_ISINVISIBLE           (1 << 14)
 # define HFS_FNDR_ISALIAS               (1 << 15)
+
+// Add to a header
+#define ENOMEM  12
+#define EINVAL  22
+#define ENOENT   2
+#define UINT_MAX 0xFFFFFFFF

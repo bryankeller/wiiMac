@@ -28,12 +28,13 @@
  * $Id: btree.c,v 1.14 2000/10/25 05:43:04 hasi Exp $
  */
 
-#include "config.h"
 #include "libhfsp.h"
 #include "volume.h"
 #include "btree.h"
 #include "record.h"
 #include "swab.h"
+#include "../string.h"
+#include "../malloc.h"
 
 /* Read the node from the given buffer and swap the bytes.
  *
@@ -298,75 +299,3 @@ void* btree_key_by_index(btree* bt, node_buf* buf, UInt16 index)
     return buf->node + *offset;
 #endif
 }
-
-
-#ifdef DEBUG
-
-/* print btree header node information */
-void btree_printhead(btree_head* head)
-{
-    UInt32 attr;
-    printf("  depth       : %#X\n",  head->depth);
-    printf("  root        : %#lX\n", head->root);
-    printf("  leaf_count  : %#lX\n", head->leaf_count);
-    printf("  leaf_head   : %#lX\n", head->leaf_head);
-    printf("  leaf_tail   : %#lX\n", head->leaf_tail);
-    printf("  node_size   : %#X\n",  head->node_size);
-    printf("  max_key_len : %#X\n",  head->max_key_len);
-    printf("  node_count  : %#lX\n", head->node_count);
-    printf("  free_nodes  : %#lX\n", head->free_nodes);
-    printf("  reserved1   : %#X\n",  head->reserved1);
-    printf("  clump_size  : %#lX\n", head->clump_size);
-    printf("  btree_type  : %#X\n",  head->btree_type);
-    attr = head->attributes;
-    printf("  reserved2   : %#X\n",  head->reserved2);
-    if (attr & HFSPLUS_BAD_CLOSE)
-        printf(" HFSPLUS_BAD_CLOSE *** ");
-    else
-        printf(" !HFSPLUS_BAD_CLOSE");
-    if (attr & HFSPLUS_TREE_BIGKEYS)
-        printf(" HFSPLUS_TREE_BIGKEYS ");
-    else
-        printf("  !HFSPLUS_TREE_BIGKEYS");
-    if (attr & HFSPLUS_TREE_VAR_NDXKEY_SIZE)
-        printf(" HFSPLUS_TREE_VAR_NDXKEY_SIZE");
-    else
-        printf(" !HFSPLUS_TREE_VAR_NDXKEY_SIZE");
-    if (attr & HFSPLUS_TREE_UNUSED)
-        printf(" HFSPLUS_TREE_UNUSED ***\n");
-    printf("\n");
-}
-
-/* Dump all the node information to stdout */
-void btree_print(btree* bt)
-{
-    btree_node_desc* node;
-
-    btree_printhead(&bt->head);
-
-    node = &bt->node;
-    printf("next     : %#lX\n", node->next);
-    printf("prev     : %#lX\n", node->prev);
-    printf("height   : %#X\n",  node->height);
-    printf("num_rec  : %#X\n",  node->num_rec);
-    printf("reserved : %#X\n",  node->reserved);
-    printf("height   : %#X\n",  node->height);                                      switch(node->kind)
-    {
-	case HFSP_NODE_NDX  :
-	    printf("HFSP_NODE_NDX\n");
-	    break;
-	case HFSP_NODE_HEAD :
-	    printf("HFSP_NODE_HEAD\n");
-	    break;
-	case HFSP_NODE_MAP  :
-	    printf("HFSP_NODE_MAP\n");
-	    break;
-	case HFSP_NODE_LEAF :
-	    printf("HFSP_NODE_LEAF\n");
-	    break;
-	default:
-	    printf("*** Unknown Node type ***\n");
-    }
-}
-
-#endif

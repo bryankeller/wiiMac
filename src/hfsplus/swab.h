@@ -25,13 +25,12 @@
  * $Id: swab.h,v 1.1.1.1 2002/03/05 19:50:29 klaus Exp $
  */
 
-#include "config.h"
-#include "libc/byteorder.h"
-
  /* basic fuction:
     value = swab_inc(ptr);
 	ptr is afterwards incremented by sizeof(value)
  */
+
+#define CONFIG_BIG_ENDIAN 1
 
 #ifndef CONFIG_BIG_ENDIAN
 

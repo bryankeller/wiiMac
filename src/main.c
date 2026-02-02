@@ -32,6 +32,7 @@ Copyright (C) 2025              Bryan Keller <kellerbryan19@gmail.com>
 #include "sha1.h"
 #include "hollywood.h"
 #include "apm.h"
+#include "hfsplus/hfsp_fs.h"
 
 #define MINIMUM_MINI_VERSION 0x00010003
 #define kMacOSXSignature 0x4D4F5358
@@ -40,6 +41,7 @@ static bool mini_version_too_old = true;
 static u32 mini_version = 0;
 static DSTATUS disk_stat = -1;
 static int selected_partition = -1;
+static char partition_names[64][255];
 static bool loading_kernel = false;
 static bool kernel_load_failed = false;
 static bool loaded_kernel = false;
@@ -150,15 +152,9 @@ static void redraw_screen() {
   
   console_println("Partitions:");
   for (int i = 0; i < found_partitions_count; i++) {
-    int partition_index = i + 1;
-
     apm_entry_t partition = found_partitions[i];
-    long long partitionOffset = (long long)partition.startingSector * 512;
-//    SetBasePosition(partitionOffset);
-//    HFSInitPartition();
-//    u_char *partitionName = HFSGetPartitionName();
-//    
-//    console_println("%c %d: %s     %s", partition_index == partition_number ? '*' : ' ', partition_index, partition.type, partitionName);
+    int partition_index = i + 1;
+    console_println("%c %d: %s     %s", partition_index == partition_number ? '*' : ' ', partition_index, partition.type, partition_names[i]);
   }
   
   if (autoboot_ms != -1) {
@@ -216,10 +212,17 @@ int main(void) {
       selected_partition = -1;
       loading_kernel = false;
       kernel_load_failed = false;
+      memset(partition_names, 0, 64*255);
       
       find_partitions();
       for (int i = 0; i < found_partitions_count; i++) {
         apm_entry_t partition = found_partitions[i];
+        volume vol;
+        if (hfsp_mount(&vol, partition.startingSector) != 0) {
+          continue;
+        }
+        hfsp_get_volume_name(&vol, partition_names[i], 255);
+        hfsp_unmount(&vol);
         if (selected_partition == -1 && (strcmp(partition.type, "Apple_HFS") == 0 || strcmp(partition.type, "Apple_HFSX") == 0)) {
           selected_partition = i;
         }
@@ -261,19 +264,23 @@ int main(void) {
       loading_kernel = true;
       redraw_screen();
       apm_entry_t partition = found_partitions[selected_partition];
-      long long partitionOffset = (long long)partition.startingSector * 512;
-//      SetBasePosition(partitionOffset);
-      printf("Load mach_kernel from offset: %lu\n", partitionOffset);
-//      if (HFSLoadFile("\\mach_kernel") > 0) {
-//        printf("Loaded mach_kernel\n");
-//        // Zero all memory leading up to the file load address
-//        memset((void*)0x2FF, 0, kLoadAddr - 0x2FF);
-//        if (load_mach_kernel() == 0) {
-//          printf("Loaded mach_kernel\n");
-//          loaded_kernel = true;
-//        }
-//      }
-      
+      volume vol;
+      if (hfsp_mount(&vol, partition.startingSector) == 0) {
+        printf("Load mach_kernel from sector: %lu\n", partition.startingSector);
+        if (hfsp_read_root_file(&vol, "mach_kernel", (void *)kLoadAddr, kLoadSize) > 0) {
+          hfsp_unmount(&vol);
+          printf("Loaded mach_kernel\n");
+          // Zero all memory leading up to the file load address
+          memset((void*)0x2FF, 0, kLoadAddr - 0x2FF);
+          if (load_mach_kernel() == 0) {
+            printf("Loaded mach_kernel\n");
+            loaded_kernel = true;
+          }
+        }
+      } else {
+        printf("Failed to mount HFS+ partition.\n");
+      }
+
       if (!loaded_kernel) {
         printf("Failed to load mach_kernel\n");
         loading_kernel = false;

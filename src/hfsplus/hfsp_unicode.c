@@ -9,9 +9,9 @@
  */
 
 
-#include "config.h"
 #include "libhfsp.h"
 #include "unicode.h"
+#include "../types.h"
 
 /* ISO-8859-1 -> unicode */
 static int

@@ -26,14 +26,13 @@
  * $Id: record.c,v 1.24 2000/10/17 05:58:46 hasi Exp $
  */
 
-#include "config.h"
 #include "libhfsp.h"
-#include "hfstime.h"
 #include "record.h"
 #include "volume.h"
 #include "btree.h"
 #include "unicode.h"
 #include "swab.h"
+#include "../types.h"
 
 /* read a hfsp_cat_key from memory */
 void* record_readkey(void* p, void* buf)
@@ -614,146 +613,3 @@ int record_up(record* r)
   fail:
     return -1;
 }
-
-#ifdef DEBUG
-
-/* print Quickdraw Point */
-static void record_print_Point(Point* p)
-{
-    printf("[ v=%d, h=%d ]", p->v, p->h);
-}
-
-/* print Quickdraw Rect */
-static void record_print_Rect(Rect* r)
-{
-    printf("[ top=%d, left=%d, bottom=%d, right=%d  ]",
-	     r->top, r->left, r->bottom, r->right);
-}
-
-/* print the key of a record */
-static void record_print_key(hfsp_cat_key* key)
-{
-    char buf[255]; // mh this _might_ overflow
-    unicode_uni2asc(buf, &key->name, 255);
-    printf("parent cnid :    %ld\n",   key->parent_cnid);
-    printf("name        :    %s\n", buf);
-}
-
-/* print permissions */
-static void record_print_perm(hfsp_perm* perm)
-{
-    printf("owner               :\t%ld\n",  perm->owner);
-    printf("group               :\t%ld\n",  perm->group);
-    printf("perm                :\t0x%lX\n",perm->mode);
-    printf("dev                 :\t%ld\n",  perm->dev);
-}
-
-/* print Directory info */
-static void record_print_DInfo(DInfo* dinfo)
-{
-    printf(  "frRect              :\t");    record_print_Rect(&dinfo->frRect);
-    printf("\nfrFlags             :\t0X%X\n",    dinfo->frFlags);
-    printf(  "frLocation          :\t");    record_print_Point(&dinfo->frLocation);
-    printf("\nfrView              :\t0X%X\n",    dinfo->frView);
-}
-
-/* print extended Directory info */
-static void record_print_DXInfo(DXInfo* xinfo)
-{
-    printf(  "frScroll            :\t");    record_print_Point(&xinfo->frScroll);
-    printf("\nfrOpenChain         :\t%ld\n",  xinfo->frOpenChain);
-    printf(  "frUnused            :\t%d\n",   xinfo->frUnused);
-    printf(  "frComment           :\t%d\n",   xinfo->frComment);
-    printf(  "frPutAway           :\t%ld\n",  xinfo->frPutAway);
-}
-
-static void record_print_folder(hfsp_cat_folder* folder)
-{
-    printf("flags               :\t0x%X\n",	folder->flags);
-    printf("valence             :\t0x%lX\n",	folder->valence);
-    printf("id                  :\t%ld\n",	folder->id);
-    record_print_perm	(&folder->permissions);
-    record_print_DInfo	(&folder->user_info);
-    record_print_DXInfo	(&folder->finder_info);
-    printf("text_encoding       :\t0x%lX\n",	folder->text_encoding);
-    printf("reserved            :\t0x%lX\n",	folder->reserved);
-}
-
-/* print File info */
-static void record_print_FInfo(FInfo* finfo)
-{
-    printf(  "fdType              :\t%4.4s\n", (char*) &finfo->fdType);
-    printf(  "fdCreator           :\t%4.4s\n", (char*) &finfo->fdCreator);
-    printf(  "fdFlags             :\t0X%X\n", finfo->fdFlags);
-    printf(  "fdLocation          :\t");     record_print_Point(&finfo->fdLocation);
-    printf("\nfdFldr              :\t%d\n",  finfo->fdFldr);
-}
-
-/* print extended File info */
-static void record_print_FXInfo(FXInfo* xinfo)
-{
-    printf(  "fdIconID            :\t%d\n",   xinfo->fdIconID);
-    // xinfo -> fdUnused;
-    printf(  "fdComment           :\t%d\n",   xinfo->fdComment);
-    printf(  "fdPutAway           :\t%ld\n",  xinfo->fdPutAway);
-}
-
-/* print folder entry */
-
-/* print file entry */
-static void record_print_file(hfsp_cat_file* file)
-{
-    printf("flags               :\t0x%X\n",	file->flags);
-    printf("reserved1           :\t0x%lX\n",	file->reserved1);
-    printf("id                  :\t%ld\n",	file->id);
-    record_print_perm	(&file->permissions);
-    record_print_FInfo	(&file->user_info);
-    record_print_FXInfo	(&file->finder_info);
-    printf("text_encoding       :\t0x%lX\n",	file->text_encoding);
-    printf("reserved            :\t0x%lX\n",	file->reserved2);
-    printf("Datafork:\n");
-    volume_print_fork (&file->data_fork);
-    printf("Rsrcfork:\n");
-    volume_print_fork (&file->res_fork);
-}
-
-/* print info for a file or folder thread */
-static void record_print_thread(hfsp_cat_thread* entry)
-{
-    char buf[255]; // mh this _might_ overflow
-    unicode_uni2asc(buf, &entry->nodeName, 255);
-    printf("parent cnid :\t%ld\n", entry->parentID);
-    printf("name        :\t%s\n" , buf);
-}
-
-/* print the information for a record */
-static void record_print_entry(hfsp_cat_entry* entry)
-{
-    switch (entry->type)
-    {
-	case HFSP_FOLDER:
-	    printf("=== Folder ===\n");
-	    return record_print_folder(&entry->u.folder);
-	case HFSP_FILE:
-	    printf("=== File ===\n");
-	    return record_print_file  (&entry->u.file);
-	case HFSP_FOLDER_THREAD:
-	    printf("=== Folder Thread ===\n");
-	    return record_print_thread(&entry->u.thread);
-	case HFSP_FILE_THREAD:
-	    printf("=== File Thread ==\n");
-	    return record_print_thread(&entry->u.thread);
-	default:
-	    printf("=== Unknown Record Type ===\n");
-    } ;
-}
-
-    /* Dump all the record information to stdout */
-void record_print(record* r)
-{
-    printf ("keyind      :    %u\n", r->keyind);
-    record_print_key  (&r->key);
-    record_print_entry(&r->record);
-}
-
-#endif

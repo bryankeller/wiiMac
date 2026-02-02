@@ -23,7 +23,8 @@
  * $Id: libhfsp.c,v 1.1.1.1 2000/07/25 10:33:40 kkaempf Exp $
  */
 
-#include "config.h"
 #include "libhfsp.h"
 
 const char *hfsp_error = "no error";       /* static error string */
+int errno = 0;
+

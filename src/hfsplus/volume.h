@@ -26,7 +26,7 @@
 
 /* Open the device, read and verify the volume header
    (and its backup) */
-extern int volume_open(volume* vol, int os_fd);
+extern int volume_open(volume* vol, int os_fd, UInt32 partition_offset);
 
 /* Write back all data eventually cached and close the device. */
 extern int volume_close(volume* vol);

@@ -25,16 +25,44 @@
  * $Id: volume.c,v 1.21 2000/10/25 05:43:04 hasi Exp $
  */
 
-#include "config.h"
 #include "libhfsp.h"
 #include "volume.h"
 #include "record.h"
 #include "btree.h"
 #include "blockiter.h"
-#include "os.h"
 #include "swab.h"
-#include "hfstime.h"
+#include "../string.h"
+#include "../diskio.h"
+#include "../bootmii_ppc.h"
 
+long long current_sector = 0;
+
+long
+os_seek(int fd, long block, int blksize_bits) {
+  (void)fd;
+  current_sector = (long long)block << (blksize_bits - HFSP_BLOCKSZ_BITS);
+  return block;
+}
+
+void
+os_seek_offset(int fd, long long offset) {
+  (void)fd;
+  current_sector = offset >> HFSP_BLOCKSZ_BITS;
+}
+
+int
+os_read(int fd, void* buf, int count, int blksize_bits) {
+  (void)fd;
+  int sectors_per_block = 1 << (blksize_bits - HFSP_BLOCKSZ_BITS);
+  u32 total_sectors = (u32)count * sectors_per_block;
+  
+  if (disk_read(0, (BYTE*)buf, (DWORD)current_sector, total_sectors) == RES_OK) {
+    current_sector += total_sectors;
+    return count;
+  } else {
+    return 0;
+  }
+}
 
 /* Fill a given buffer with the given block in volume.
  */
@@ -198,7 +226,7 @@ volume_read_wrapper(volume * vol, hfsp_vh* vh)
 		sect_per_block =  (drAlBlkSiz / HFSP_BLOCKSZ);
 		// end is absolute (not relative to HFS+ start)
 		vol->maxblocks = embedl * sect_per_block;
-		vol->startblock = drAlBlSt + embeds * sect_per_block;
+		vol->startblock += drAlBlSt + embeds * sect_per_block;
 		/* Now we can try to read the embedded HFS+ volume header */
 		return volume_read(vol,vh,2);
 	}
@@ -207,7 +235,7 @@ volume_read_wrapper(volume * vol, hfsp_vh* vh)
                 ret = volume_readbuf(vh, p);
 		if( !ret ) {
 		    /* When reading the initial partition we must use 512 byte blocks */
-		    vol_size = (uint64_t)vh->blocksize * vh->total_blocks;
+		    vol_size = (UInt64)vh->blocksize * vh->total_blocks;
 		    vol->maxblocks = vol_size / HFSP_BLOCKSZ;
 		}
 		
@@ -222,7 +250,7 @@ fail:
 /* Open the device, read and verify the volume header
    (and its backup) */
 int
-volume_open( volume* vol, int os_fd )
+volume_open( volume* vol, int os_fd, UInt32 partition_offset )
 {
 	hfsp_vh backup;	/* backup volume found at second to last block */
 	long	sect_per_block;
@@ -230,7 +258,7 @@ volume_open( volume* vol, int os_fd )
 
 	vol->blksize_bits	= HFSP_BLOCKSZ_BITS;
 	vol->blksize		= HFSP_BLOCKSZ;
-	vol->startblock		= 0;
+	vol->startblock		= partition_offset;
 	vol->maxblocks		= 3;
 		/* this should be enough until we find the volume descriptor */
 	vol->extents		= NULL; /* Thanks to Jeremias Sauceda */
@@ -310,10 +338,10 @@ volume_probe(int fd, long long offset)
 	os_seek_offset( fd, 2 * (1 << HFSP_BLOCKSZ_BITS) + offset );
 	os_read(fd, vol, 2, HFSP_BLOCKSZ_BITS);
 
-	if (__be16_to_cpu(vol[0]) == HFS_VOLHEAD_SIG &&
-		__be16_to_cpu(vol[0x3e]) == HFSP_VOLHEAD_SIG) {
+	if (vol[0] == HFS_VOLHEAD_SIG &&
+		vol[0x3e] == HFSP_VOLHEAD_SIG) {
 		ret = -1;
-	} else if (__be16_to_cpu(vol[0]) == HFSP_VOLHEAD_SIG) {
+	} else if (vol[0] == HFSP_VOLHEAD_SIG) {
 		ret = -1;
 	}
 

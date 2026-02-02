@@ -24,6 +24,7 @@ size_t strlcat(char *, const char *, size_t);
 char *strchr(const char *, int);
 size_t strspn(const char *, const char *);
 size_t strcspn(const char *, const char *);
+void bzero(void *dst, size_t len);
 
 #endif
 

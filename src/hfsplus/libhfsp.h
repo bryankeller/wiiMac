@@ -27,9 +27,13 @@
 # include "apple.h"
 # include "hfs.h"
 # include "hfsp.h"
+# include "../types.h"
+# include "../malloc.h"
 
 /* Last error is eventually found here */
 extern const char *hfsp_error;
+
+extern int errno;
 
 # define HFSP_ERROR(code, str)  \
     do { hfsp_error = (str), errno = (code); goto fail; } while (0)
