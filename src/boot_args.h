@@ -7,7 +7,6 @@
 
 #include "types.h"
 
-#define boot_args_address (0x00700000) // @ 7 MB
 #define boot_args_size (0x000001fc)
 
 /*
@@ -45,6 +44,8 @@ typedef struct boot_args {
     u32	deviceTreeLength;           /* Length of flattened tree */
     u32	topOfKernelData;            /* Highest address used in kernel data area */
 } boot_args_t;
+
+u32 boot_args_address;
 
 int partition_number = -1;
 char boot_args_command_line[256];

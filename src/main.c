@@ -18,7 +18,7 @@ Copyright (C) 2025              Bryan Keller <kellerbryan19@gmail.com>
 #include "device_tree.h"
 #include "string.h"
 #include "ipc.h"
-#include "macho.h"
+#include "macho_decoder.h"
 #include "mini_ipc.h"
 #include "fat.h"
 #include "malloc.h"
@@ -30,6 +30,7 @@ Copyright (C) 2025              Bryan Keller <kellerbryan19@gmail.com>
 #include "irq.h"
 #include "hollywood.h"
 #include "apm.h"
+#include "kernel_allocator.h"
 #include "hfsplus/hfsp_fs.h"
 
 #define MINIMUM_MINI_VERSION 0x00010003
@@ -242,6 +243,7 @@ static void handle_disk_change() {
     printf("Reading config file at /wiiMac/config.txt...\n");
     if (f_open(&file_pointer, "/wiiMac/config.txt", FA_READ) == FR_OK) {
       process_config_file(file_pointer);
+      f_close(&file_pointer);
     } else {
       printf("Failed to open config file at /wiiMac/config.txt\n");
     }
@@ -278,26 +280,16 @@ static void handle_disk_change() {
 
 static void decode_kernel() {
   // Zero all memory leading up to the file load address
-  memset((void*)0x2FF, 0, kLoadAddr - 0x2FF);
+  memset((void*)0x2FF, 0, kernel_file_load_address - 0x2FF);
   if (decode_mach_kernel() == 0) {
     loaded_kernel = true;
   }
 }
 
 static void load_kernel_from_fat() {
-  if (apm_fat_partition_index == -1 || apm_fat_partition_index >= apm_found_partitions_count) {
-    return;
-  }
+  FIL file_pointer;
   
   printf("Loading /wiiMac/mach_kernel...\n");
-  
-  FIL file_pointer;
-  apm_entry_t partition = apm_found_partitions[apm_fat_partition_index];
-  
-  if (fat_mount(partition.startingSector) != FR_OK) {
-    printf("Failed to mount FAT partition.\n");
-    return;
-  }
   
   if (f_open(&file_pointer, "/wiiMac/mach_kernel", FA_READ) != FR_OK) {
     printf("Failed to load /wiiMac/mach_kernel\n");
@@ -305,7 +297,7 @@ static void load_kernel_from_fat() {
   }
   
   u32 bytes_read;
-  if (f_read(&file_pointer, (void *)kLoadAddr, file_pointer.fsize, &bytes_read) != FR_OK) {
+  if (f_read(&file_pointer, (void *)kernel_file_load_address, file_pointer.fsize, &bytes_read) != FR_OK) {
     printf("Failed to load /wiiMac/mach_kernel\n");
     return;
   }
@@ -313,7 +305,6 @@ static void load_kernel_from_fat() {
   f_close(&file_pointer);
     
   printf("Loaded /wiiMac/mach_kernel\n");
-  fat_umount();
   decode_kernel();
 }
 
@@ -328,7 +319,7 @@ static void load_kernel_from_hfs() {
     return;
   }
   
-  if (hfsp_read_file(&vol, "/mach_kernel", (void *)kLoadAddr) == 0) {
+  if (hfsp_read_file(&vol, "/mach_kernel", (void *)kernel_file_load_address) == 0) {
     printf("Failed to load /mach_kernel\n");
     return;
   }
@@ -404,11 +395,21 @@ int main(void) {
       redraw_screen();
       
       // Try to load override kernel from FAT partition first (/wiiMac/mach_kernel)
-      load_kernel_from_fat();
+      if (apm_fat_partition_index >= 0 && apm_fat_partition_index < apm_found_partitions_count) {
+        apm_entry_t partition = apm_found_partitions[apm_fat_partition_index];
+        if (fat_mount(partition.startingSector) == FR_OK) {
+          load_kernel_from_fat();
+        }
+      } else {
+        printf("Failed to mount FAT partition.\n");
+      }
+      
       // Otherwise, load kernel from HFS+ partition (/mach_kernel)
       if (!loaded_kernel) {
         load_kernel_from_hfs();
       }
+      
+      fat_umount();
 
       if (!loaded_kernel) {
         loading_kernel = false;

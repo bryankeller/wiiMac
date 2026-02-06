@@ -5,7 +5,7 @@
 #include "boot_args.h"
 #include "bootmii_ppc.h"
 #include "device_tree.h"
-#include "macho.h"
+#include "macho_decoder.h"
 #include "string.h"
 
 struct DTProperty {
@@ -360,7 +360,7 @@ void build_device_tree() {
         add_property("name", name, strlen(name) + 1);
         
         u32 kernel_header[2] = {
-          kHeaderAddr, kernel_header_size
+          kernel_header_start, kernel_header_size
         };
         add_property("Kernel-__HEADER", kernel_header, sizeof(kernel_header));
         
@@ -380,7 +380,7 @@ void build_device_tree() {
         add_property("Kernel-__DATA", kernel_data, sizeof(kernel_data));
         
         u32 kernel_symtab[2] = {
-          kSymtabAddr, kernel_symtab_size
+          kernel_symtab_start, kernel_symtab_size
         };
         add_property("Kernel-__SYMTAB", kernel_symtab, sizeof(kernel_symtab));
         
