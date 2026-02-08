@@ -9,7 +9,7 @@
 #include "kernel_allocator.h"
 
 void set_up_boot_args() {
-  boot_args_address = alloc_kernel_memory(boot_args_size);
+  boot_args_address = alloc_kernel_memory(BOOT_ARGS_SIZE);
   boot_args_t *boot_args = (boot_args_t*)boot_args_address;
   
   boot_args->Revision = 1;

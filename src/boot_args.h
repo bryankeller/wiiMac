@@ -7,7 +7,7 @@
 
 #include "types.h"
 
-#define boot_args_size (0x000001fc)
+#define BOOT_ARGS_SIZE (0x000001fc)
 
 /*
  * Video information..

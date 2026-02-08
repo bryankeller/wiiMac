@@ -7,11 +7,13 @@
 static u32 last_kernel_address = 0;
 
 u32 alloc_kernel_memory(size_t size) {
+  u32 address = last_kernel_address;
+  
   last_kernel_address += (size + 0xFFF) & ~0xFFF; // round to 4KB pages
-  if (last_kernel_address > kernel_file_load_address) {
+  if (last_kernel_address > KERNEL_FILE_LOAD_ADDRESS) {
     return 0;
   }
-  return last_kernel_address;
+  return address;
 }
 
 u32 top_of_kernel_data() {

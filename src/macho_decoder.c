@@ -114,7 +114,7 @@ static int handle_lc_symtab(load_command_t *load_cmd);
 static int handle_lc_unixthread(load_command_t *load_cmd);
 
 int decode_mach_kernel() {
-  mach_header_t *header = (mach_header_t *)kernel_file_load_address;
+  mach_header_t *header = (mach_header_t *)KERNEL_FILE_LOAD_ADDRESS;
   
   printf("\n");
   printf("Found kernel header:\n");
@@ -129,7 +129,7 @@ int decode_mach_kernel() {
   printf("\n");
   printf("Decoding Mach Kernel...\n");
   
-  void *cmds_offset = ((void *)kernel_file_load_address) + sizeof(mach_header_t);
+  void *cmds_offset = ((void *)KERNEL_FILE_LOAD_ADDRESS) + sizeof(mach_header_t);
   u32 num_cmds = header->ncmds;
   
   for (u32 i = 0; i < num_cmds; i++) {
@@ -196,7 +196,7 @@ static int handle_lc_segment(load_command_t *load_cmd) {
 }
 
 static int load_segment(u32 foff, u32 fsize, u32 vmaddr, u32 vmsize) {
-  void *src = ((void *)kernel_file_load_address) + foff;
+  void *src = ((void *)KERNEL_FILE_LOAD_ADDRESS) + foff;
   void *dst = (void *)vmaddr;
   
   printf("memcpy 0x%08x-0x%08x to 0x%08x-0x%08x\n", src, src + fsize, dst, dst + fsize);
@@ -234,7 +234,7 @@ static int handle_lc_symtab(load_command_t *load_cmd) {
   symtabSave->stroff = sym_off + sym_size;
   symtabSave->strsize = symtab->strsize;
   
-  memcpy((void *)sym_off, ((void *)kernel_file_load_address) + symtab->symoff, total_size);
+  memcpy((void *)sym_off, ((void *)KERNEL_FILE_LOAD_ADDRESS) + symtab->symoff, total_size);
   
   kernel_symtab_size = symtab_size;
   

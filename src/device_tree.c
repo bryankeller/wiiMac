@@ -7,6 +7,8 @@
 #include "device_tree.h"
 #include "macho_decoder.h"
 #include "string.h"
+#include "fs.h"
+#include "driver_loader.h"
 
 struct DTProperty {
   char name[32];                        // NUL terminated property name
@@ -354,7 +356,7 @@ void build_device_tree() {
       add_property("name", name, strlen(name) + 1);
       
       // /chosen/memory-map
-      create_node(/*nProps=*/8, /*nChildren=*/0);
+      create_node(/*nProps=*/8 + allocated_drivers_count, /*nChildren=*/0);
       {
         const char* name = "memory-map";
         add_property("name", name, strlen(name) + 1);
@@ -385,7 +387,7 @@ void build_device_tree() {
         add_property("Kernel-__SYMTAB", kernel_symtab, sizeof(kernel_symtab));
         
         u32 boot_args[2] = {
-          boot_args_address, boot_args_size
+          boot_args_address, BOOT_ARGS_SIZE
         };
         add_property("BootArgs", boot_args, sizeof(boot_args));
         
@@ -393,6 +395,18 @@ void build_device_tree() {
           0x01600000, 0x00200000
         };
         add_property("framebuffer", framebuffer, sizeof(framebuffer));
+        
+        for (int i = 0; i < allocated_drivers_count; i++) {
+          driver_info_t *driver_info = allocated_drivers[i];
+          u32 address = (u32)driver_info;
+          u32 size = sizeof(driver_info_t) + driver_info->info_plist_size + driver_info->bin_size;
+          u32 driver[2] = {
+            address, size
+          };
+          char name[15];
+          sprintf(name, "Driver-%x", address);
+          add_property(name, driver, sizeof(driver));
+        }
       }
     }
     

@@ -30,11 +30,13 @@ Copyright (C) 2025              Bryan Keller <kellerbryan19@gmail.com>
 #include "irq.h"
 #include "hollywood.h"
 #include "apm.h"
+#include "driver_loader.h"
 #include "kernel_allocator.h"
+#include "fs.h"
 #include "hfsplus/hfsp_fs.h"
 
 #define MINIMUM_MINI_VERSION 0x00010003
-#define kMacOSXSignature 0x4D4F5358
+#define MAC_OS_X_SIGNATURE 0x4D4F5358
 
 static bool mini_version_too_old = true;
 static u32 mini_version = 0;
@@ -138,7 +140,7 @@ static int start_mach_kernel() {
   __asm__ volatile("sync");
   __asm__ volatile("eieio");
   
-  (*(void (*)())kernel_entry_point)(boot_args_address, kMacOSXSignature);
+  (*(void (*)())kernel_entry_point)(boot_args_address, MAC_OS_X_SIGNATURE);
   
   return -1;
 }
@@ -280,7 +282,7 @@ static void handle_disk_change() {
 
 static void decode_kernel() {
   // Zero all memory leading up to the file load address
-  memset((void*)0x2FF, 0, kernel_file_load_address - 0x2FF);
+  memset((void*)0x2FF, 0, KERNEL_FILE_LOAD_ADDRESS - 0x2FF);
   if (decode_mach_kernel() == 0) {
     loaded_kernel = true;
   }
@@ -296,8 +298,13 @@ static void load_kernel_from_fat() {
     return;
   }
   
+  if (file_pointer.fsize > KERNEL_FILE_LOAD_SIZE) {
+    printf("Failed to load /wiiMac/mach_kernel, kernel file is too big.\n");
+    return;
+  }
+  
   u32 bytes_read;
-  if (f_read(&file_pointer, (void *)kernel_file_load_address, file_pointer.fsize, &bytes_read) != FR_OK) {
+  if (f_read(&file_pointer, (void *)KERNEL_FILE_LOAD_ADDRESS, file_pointer.fsize, &bytes_read) != FR_OK) {
     printf("Failed to load /wiiMac/mach_kernel\n");
     return;
   }
@@ -319,7 +326,7 @@ static void load_kernel_from_hfs() {
     return;
   }
   
-  if (hfsp_read_file(&vol, "/mach_kernel", (void *)kernel_file_load_address) == 0) {
+  if (hfsp_read_file(&vol, "/mach_kernel", (void *)KERNEL_FILE_LOAD_ADDRESS) == 0) {
     printf("Failed to load /mach_kernel\n");
     return;
   }
@@ -422,6 +429,25 @@ int main(void) {
     
     if (autoboot_ms != -1) {
       autoboot_ms += 100;
+    }
+  }
+  
+  // Load /S/L/E/System.kext (and its Plugins) from the boot partition.
+  // This seems to be a dependency for other kexts, so it needs to be loaded.
+  // Specifically, the IOKit.kext plugin seems important.
+  volume vol;
+  if (hfsp_mount(&vol, apm_found_partitions[selected_boot_partition_index].startingSector) == 0) {
+    load_kext_from_dir(&vol, "/System/Library/Extensions/System.kext", "", fs_hfsp_read_file, fs_hfsp_get_file_metadata, fs_hfsp_list_dir);
+    hfsp_unmount(&vol);
+  }
+  
+  // Try to load kexts from FAT partition
+  if (apm_fat_partition_index >= 0 && apm_fat_partition_index < apm_found_partitions_count) {
+    apm_entry_t partition = apm_found_partitions[apm_fat_partition_index];
+    if (fat_mount(partition.startingSector) == FR_OK) {
+      printf("\n");
+      load_kexts_from_dir(NULL, "/wiiMac", fs_fat_read_file, fs_fat_get_file_metadata, fs_fat_list_dir);
+      fat_umount();
     }
   }
 

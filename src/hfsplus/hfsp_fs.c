@@ -79,7 +79,7 @@ void hfsp_unmount(volume *vol) {
   volume_close(vol);
 }
 
-int hfsp_get_volume_name(volume *vol, char *buf, int buflen) {
+int hfsp_get_volume_name(volume *vol, char *buf, size_t buf_size) {
   record r;
   if (record_init_cnid(&r, &vol->catalog, HFSP_ROOT_CNID) != 0) {
     return -1;
@@ -87,7 +87,7 @@ int hfsp_get_volume_name(volume *vol, char *buf, int buflen) {
   if (r.record.type != HFSP_FOLDER_THREAD) {
     return -1;
   }
-  unicode_uni2asc(buf, &r.record.u.thread.nodeName, buflen);
+  unicode_uni2asc(buf, &r.record.u.thread.nodeName, buf_size);
   return 0;
 }
 
@@ -112,4 +112,47 @@ int hfsp_read_file(volume *vol, const char *file_path, void *buf) {
   }
   
   return (int)filesize;
+}
+
+int hfsp_get_file_metadata(volume *vol, const char *path, char *name, int name_length, size_t *size) {
+  record r;
+  if (hfsp_resolve_path(vol, path, &r) != 0) {
+    return -1;
+  }
+  if (r.record.type != HFSP_FILE) {
+    return -1;
+  }
+  
+  unicode_uni2asc(name, &r.key.name, name_length);
+  *size = (size_t)r.record.u.file.data_fork.total_size;
+  return 0;
+}
+
+int hfsp_list_dir(volume *vol, const char *path, void (*callback)(const char *name, int is_directory, void *ctx), void *cb_ctx) {
+  record r, child;
+  char name[256];
+  
+  if (hfsp_resolve_path(vol, path, &r) != 0) {
+    return -1;
+  }
+  if (r.record.type != HFSP_FOLDER) {
+    return -1;
+  }
+  
+  if (record_init_parent(&child, &r) != 0) {
+    return 0; // Empty directory
+  }
+  
+  u32 parent_cnid = r.record.u.folder.id;
+  do {
+    if (child.key.parent_cnid != parent_cnid) {
+      break; // Moved past this directory
+    }
+    if (child.record.type == HFSP_FILE || child.record.type == HFSP_FOLDER) {
+      unicode_uni2asc(name, &child.key.name, sizeof(name));
+      callback(name, child.record.type == HFSP_FOLDER, cb_ctx);
+    }
+  } while (record_next(&child) == 0);
+  
+  return 0;
 }
