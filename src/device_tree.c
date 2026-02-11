@@ -356,35 +356,10 @@ void build_device_tree() {
       add_property("name", name, strlen(name) + 1);
       
       // /chosen/memory-map
-      create_node(/*nProps=*/8 + allocated_drivers_count, /*nChildren=*/0);
+      create_node(/*nProps=*/3 + macho_memory_map_entries_count + allocated_drivers_count, /*nChildren=*/0);
       {
         const char* name = "memory-map";
         add_property("name", name, strlen(name) + 1);
-        
-        u32 kernel_header[2] = {
-          kernel_header_start, kernel_header_size
-        };
-        add_property("Kernel-__HEADER", kernel_header, sizeof(kernel_header));
-        
-        u32 kernel_vectors[2] = {
-          0x00000000, 0x00011000
-        };
-        add_property("Kernel-__VECTORS", kernel_vectors, sizeof(kernel_vectors));
-        
-        u32 kernel_text[2] = {
-          kernel_text_start, kernel_text_size
-        };
-        add_property("Kernel-__TEXT", kernel_text, sizeof(kernel_text));
-        
-        u32 kernel_data[2] = {
-          kernel_data_start, kernel_data_size
-        };
-        add_property("Kernel-__DATA", kernel_data, sizeof(kernel_data));
-        
-        u32 kernel_symtab[2] = {
-          kernel_symtab_start, kernel_symtab_size
-        };
-        add_property("Kernel-__SYMTAB", kernel_symtab, sizeof(kernel_symtab));
         
         u32 boot_args[2] = {
           boot_args_address, BOOT_ARGS_SIZE
@@ -395,6 +370,14 @@ void build_device_tree() {
           0x01600000, 0x00200000
         };
         add_property("framebuffer", framebuffer, sizeof(framebuffer));
+        
+        for (int i = 0; i < macho_memory_map_entries_count; i++) {
+          macho_memory_map_entry_t entry = macho_memory_map_entries[i];
+          u32 macho_entry[2] = {
+            entry.start, entry.size
+          };
+          add_property(entry.name, macho_entry, sizeof(macho_entry));
+        }
         
         for (int i = 0; i < allocated_drivers_count; i++) {
           driver_info_t *driver_info = allocated_drivers[i];

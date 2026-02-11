@@ -5,19 +5,18 @@
 #ifndef MACHO_H
 #define MACHO_H
 
+#define MAX_MACHO_MEMORY_MAP_ENTRIES 16
+
+typedef struct macho_memory_map_entry  {
+  char name[32];
+  u32 start;
+  u32 size;
+} macho_memory_map_entry_t;
+
+macho_memory_map_entry_t macho_memory_map_entries[MAX_MACHO_MEMORY_MAP_ENTRIES];
+int macho_memory_map_entries_count = 0;
+
 u32 kernel_entry_point;
-
-u32 kernel_header_start;
-u32 kernel_header_size;
-
-u32 kernel_text_start;
-u32 kernel_text_size;
-
-u32 kernel_data_start;
-u32 kernel_data_size;
-
-u32 kernel_symtab_start;
-u32 kernel_symtab_size;
 
 int decode_mach_kernel();
 

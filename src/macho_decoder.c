@@ -142,9 +142,14 @@ int decode_mach_kernel() {
     printf("\n");
   }
   
-  kernel_header_size = (u32)cmds_offset - (u32)header;
-  kernel_header_start = alloc_kernel_memory(kernel_header_size);
-  memcpy((void*)kernel_header_start, header, kernel_header_size);
+  u32 header_size = (u32)cmds_offset - (u32)header;
+  u32 kernel_header_start = alloc_kernel_memory(header_size);
+  memcpy((void*)kernel_header_start, header, header_size);
+  
+  strlcpy(macho_memory_map_entries[macho_memory_map_entries_count].name, "Kernel-__HEADER", sizeof(macho_memory_map_entries[macho_memory_map_entries_count].name));
+  macho_memory_map_entries[macho_memory_map_entries_count].start = kernel_header_start;
+  macho_memory_map_entries[macho_memory_map_entries_count].size = header_size;
+  macho_memory_map_entries_count += 1;
   
   return 0;
 }
@@ -176,20 +181,15 @@ static int handle_lc_segment(load_command_t *load_cmd) {
   segment_command_t *segment = (segment_command_t *)load_cmd;
   printf("Handle %s\n", segment->segname);
   
+  sprintf(macho_memory_map_entries[macho_memory_map_entries_count].name, "Kernel-%s", segment->segname);
+  macho_memory_map_entries[macho_memory_map_entries_count].start = segment->vmaddr;
+  macho_memory_map_entries[macho_memory_map_entries_count].size = segment->vmsize;
+  macho_memory_map_entries_count += 1;
+  
   int ret = load_segment(segment->fileoff, segment->filesize, segment->vmaddr, segment->vmsize);
   if (ret != 0) {
     printf("Failed to load segment %s into memory\n", segment->segname);
     return -1;
-  }
-  
-  if (strcmp(segment->segname, "__TEXT") == 0) {
-    printf("Found __TEXT\n");
-    kernel_text_start = segment->vmaddr;
-    kernel_text_size = segment->vmsize;
-  } else if (strcmp(segment->segname, "__DATA") == 0) {
-    printf("Found __DATA\n");
-    kernel_data_start = segment->vmaddr;
-    kernel_data_size = segment->vmsize;
   }
   
   return 0;
@@ -224,7 +224,7 @@ static int handle_lc_symtab(load_command_t *load_cmd) {
   u32 sym_size = symtab->stroff - symtab->symoff;
   u32 total_size = sym_size + symtab->strsize;
   u32 symtab_size = total_size + sizeof(symtab_command_t);
-  kernel_symtab_start = alloc_kernel_memory(symtab_size);
+  u32 kernel_symtab_start = alloc_kernel_memory(symtab_size);
   printf("0x%08x-0x%08x\n", kernel_symtab_start, kernel_symtab_start + symtab_size);
   
   symtab_command_t *symtabSave = (symtab_command_t *)kernel_symtab_start;
@@ -236,7 +236,10 @@ static int handle_lc_symtab(load_command_t *load_cmd) {
   
   memcpy((void *)sym_off, ((void *)KERNEL_FILE_LOAD_ADDRESS) + symtab->symoff, total_size);
   
-  kernel_symtab_size = symtab_size;
+  strlcpy(macho_memory_map_entries[macho_memory_map_entries_count].name, "Kernel-__SYMTAB", sizeof(macho_memory_map_entries[macho_memory_map_entries_count].name));
+  macho_memory_map_entries[macho_memory_map_entries_count].start = kernel_symtab_start;
+  macho_memory_map_entries[macho_memory_map_entries_count].size = symtab_size;
+  macho_memory_map_entries_count += 1;
   
   return 0;
 }
