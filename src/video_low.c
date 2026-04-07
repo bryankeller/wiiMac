@@ -128,10 +128,10 @@ void VIDEO_SetFrameBuffer(void *FrameBufferAddr)
 {
 	u32 fb = virt_to_phys(FrameBufferAddr);
 
-	write32(R_VIDEO_FRAMEBUFFER_1, (fb >> 5) | 0x10000000);
+	write32(R_VIDEO_FRAMEBUFFER_1, ((fb >> 5) & 0x00ffffff) | 0x10000000);
 	if(video_mode != VIDEO_640X480_NTSCp_YUV16)
 		fb += 2 * 640; // 640 pixels == 1 line
-	write32(R_VIDEO_FRAMEBUFFER_2, (fb >> 5) | 0x10000000);
+	write32(R_VIDEO_FRAMEBUFFER_2, ((fb >> 5) & 0x00ffffff) | 0x10000000);
 }
 
 void VIDEO_WaitVSync(void)
