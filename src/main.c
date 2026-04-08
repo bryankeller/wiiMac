@@ -484,12 +484,20 @@ int main(void) {
   loading_kexts = true;
   redraw_screen();
   
-  // Load /S/L/E/System.kext (and its Plugins) from the boot partition.
-  // This seems to be a dependency for other kexts, so it needs to be loaded.
-  // Specifically, the IOKit.kext plugin seems important.
   volume vol;
   if (hfsp_mount(&vol, apm_found_partitions[selected_boot_partition_index].startingSector) == 0) {
+    // Load /S/L/E/System.kext (and its Plugins) from the boot partition.
+    // This seems to be a dependency for other kexts, so it needs to be loaded.
+    // Specifically, the IOKit.kext plugin seems important.
     load_kext_from_dir(&vol, "/System/Library/Extensions/System.kext", "", fs_hfsp_read_file, fs_hfsp_get_file_metadata, fs_hfsp_list_dir);
+    
+    // Load these drivers if they exist
+    load_kext_from_dir(&vol, "/System/Library/Extensions/AppleOnboardDisplay.kext", "AppleOnboardDisplay", fs_hfsp_read_file, fs_hfsp_get_file_metadata, fs_hfsp_list_dir);
+    load_kext_from_dir(&vol, "/System/Library/Extensions/IOAudioFamily.kext", "IOAudioFamily", fs_hfsp_read_file, fs_hfsp_get_file_metadata, fs_hfsp_list_dir);
+    load_kext_from_dir(&vol, "/System/Library/Extensions/IOStorageFamily.kext", "IOStorageFamily", fs_hfsp_read_file, fs_hfsp_get_file_metadata, fs_hfsp_list_dir);
+    load_kext_from_dir(&vol, "/System/Library/Extensions/IOGraphicsFamily.kext", "IOGraphicsFamily", fs_hfsp_read_file, fs_hfsp_get_file_metadata, fs_hfsp_list_dir);
+    load_kext_from_dir(&vol, "/System/Library/Extensions/IOPCIFamily.kext", "IOPCIFamily", fs_hfsp_read_file, fs_hfsp_get_file_metadata, fs_hfsp_list_dir);
+    
     hfsp_unmount(&vol);
   }
   
