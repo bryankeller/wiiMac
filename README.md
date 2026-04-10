@@ -124,13 +124,14 @@ sudo parted /dev/sdX --script \
 # If hfsprogs is not installed:
 sudo apt install hfsprogs        # Debian / Ubuntu
 sudo pacman -S hfsprogs          # Arch
+sudo dnf install hfsplus-tools   # Fedora
 
 # then
 
 # Replace sdX with the correct device for the SD card
-sudo mkfs.hfsplus -v "Macintosh HD" /dev/sdX1
-sudo mkfs.hfsplus -v "Install" /dev/sdX2
-sudo mkfs.vfat -F 32 -n "Support" /dev/sdX3
+sudo mkfs.hfsplus -v "Macintosh HD" /dev/sdX2
+sudo mkfs.hfsplus -v "Install" /dev/sdX3
+sudo mkfs.vfat -F 32 -n "Support" /dev/sdX4
 ```
 
 </details>
