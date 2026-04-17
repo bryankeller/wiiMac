@@ -168,12 +168,17 @@ sudo dd if=/dev/rdiskYsB of=/dev/rdiskXsA bs=512k status=progress
 <details>
 <summary>Linux Host</summary>
 
-1. Run the following terminal command to obtain the device and partition numbers for the SD card Install partition and the Mac OS X installer partition.
+1. Use the following command to create logical devices for each partition in the installer image.
+```
+sudo kpartx -av /path/to/installer/iso
+```
+
+2. Run the following terminal command to obtain the device and partition numbers for the SD card Install partition and the Mac OS X installer partition.
 ```
 lsblk -f
 ```
 
-2. Unmount both partitions:
+3. Unmount both partitions:
 ```
 # Replace sdXA with the correct device and partition number for the SD card Install partition
 sudo umount /dev/sdXA
@@ -181,7 +186,7 @@ sudo umount /dev/sdXA
 sudo umount /dev/sdYB
 ```
 
-3. Block-level copy the contents of the source Mac OS X installer partition to the destination Install partition on your SD card:
+4. Block-level copy the contents of the source Mac OS X installer partition to the destination Install partition on your SD card:
 ```
 # Replace sdXA with the correct device and partition number for the SD card Install partition
 # Replace sdYB with the correct device and partition number for the source installation
