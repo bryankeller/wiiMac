@@ -497,7 +497,8 @@ int main(void) {
     load_kext_from_dir(&vol, "/System/Library/Extensions/IOStorageFamily.kext", "IOStorageFamily", fs_hfsp_read_file, fs_hfsp_get_file_metadata, fs_hfsp_list_dir);
     load_kext_from_dir(&vol, "/System/Library/Extensions/IOGraphicsFamily.kext", "IOGraphicsFamily", fs_hfsp_read_file, fs_hfsp_get_file_metadata, fs_hfsp_list_dir);
     load_kext_from_dir(&vol, "/System/Library/Extensions/IOPCIFamily.kext", "IOPCIFamily", fs_hfsp_read_file, fs_hfsp_get_file_metadata, fs_hfsp_list_dir);
-    
+    load_kext_from_dir(&vol, "/System/Library/Extensions/IOHIDFamily.kext", "IOHIDFamily", fs_hfsp_read_file, fs_hfsp_get_file_metadata, fs_hfsp_list_dir);
+
     hfsp_unmount(&vol);
   }
   
