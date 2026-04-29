@@ -293,7 +293,7 @@ static void handle_disk_change() {
     for (int i = 0; i < apm_found_partitions_count; i++) {
       apm_entry_t partition = apm_found_partitions[i];
       
-      if (apm_fat_partition_index == -1 && (strcmp(partition.type, "DOS_FAT_32") == 0 || strcmp(partition.type, "DOS_FAT_16") == 0)) {
+      if (apm_fat_partition_index == -1 && (strcmp(partition.type, "DOS_FAT_32") == 0 || strcmp(partition.type, "DOS_FAT_16") == 0 || strcmp(partition.type, "Apple_UNIX_SVR2") == 0)) {
         apm_fat_partition_index = i;
       }
       
