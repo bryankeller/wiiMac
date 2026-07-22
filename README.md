@@ -136,6 +136,142 @@ sudo mkfs.vfat -F 32 -n "Support" /dev/sdX4
 
 </details>
 
+<details>
+<summary>Windows Subsystem for Linux (WSL) Host</summary>
+
+**Mount Media**
+To use WSL to prepare media, we need to expose USB devices to WSL.
+
+1. Install usbipd-win:
+
+```batch
+winget install --interactive --exact dorssel.usbipd-win
+```
+
+2. Open a new PowerShell window as **Administrator** and list USB devices without the SD card inserted:
+
+```batch
+usbipd list
+```
+
+```
+Connected:
+BUSID  VID:PID    DEVICE                                             STATE
+5-3    0bda:8156  Realtek USB 2.5GbE Family Controller               Not shared
+9-4    0bda:1101  USB Input Device                                   Not shared
+10-1   045e:0772  Microsoft® LifeCam Studio(TM), USB Input Device    Not shared
+10-2   045e:077b  USB Input Device                                   Not shared
+10-4   0b0e:0412  Jabra SPEAK 410 USB, USB Input Device              Not shared
+10-5   0bda:1100  USB Input Device                                   Not shared
+
+Persisted:
+GUID                                  DEVICE
+890b7cb4-6195-472d-9326-407f4c6303a3  USB Mass Storage Device
+```
+
+3. Plug in the SD card and re-enumerate USB devices to identify the SD card (7-1 in the output below)
+
+```batch
+usbipd list
+```
+
+```
+Connected:
+BUSID  VID:PID    DEVICE                                             STATE
+5-3    0bda:8156  Realtek USB 2.5GbE Family Controller               Not shared
+7-1    05e3:0749  USB Mass Storage Device                            Shared
+9-4    0bda:1101  USB Input Device                                   Not shared
+10-1   045e:0772  Microsoft® LifeCam Studio(TM), USB Input Device    Not shared
+10-2   045e:077b  USB Input Device                                   Not shared
+10-4   0b0e:0412  Jabra SPEAK 410 USB, USB Input Device              Not shared
+10-5   0bda:1100  USB Input Device                                   Not shared
+
+Persisted:
+GUID                                  DEVICE
+890b7cb4-6195-472d-9326-407f4c6303a3  USB Mass Storage Device
+```
+
+4. Prepare to share the device (7-1):
+
+```batch
+usbipd bind --busid 7-1
+```
+
+5. Attach the device to WSL:
+
+```batch
+usbipd attach --wsl --busid 7-1
+```
+
+6. Run the following terminal command to obtain the device for the target SD card:
+
+```bash
+lsblk -f
+```
+
+```
+NAME
+    FSTYPE FSVER LABEL UUID                                 FSAVAIL FSUSE% MOUNTPOINTS
+sda ext4   1.0
+sdb ext4   1.0
+sdc swap   1           3d051596-f50e-407d-9696-a285606a071c                [SWAP]
+sdd ext4   1.0         633fba1b-1ccb-4dbf-bed6-79822f9f35a1  954.1G     0% /mnt/wslg/distro
+                                                                           /
+sde
+sdf
+```
+
+`sde` and `sdf` are the volumes for the SD Card (and adapter?). 
+
+7. Install needed utilities for disk partitioning and formatting:
+
+```bash
+sudo apt install parted hfsprogs dosfstools mtools kpartx
+```
+
+8. Partition the SD card. Warning: this will erase the SD card.
+
+```bash
+# Replace sdX with the correct device for the SD card
+sudo 
+parted /dev/sdX
+mklabel mac
+mkpart primary hfs+ 1MiB -1088MiB
+mkpart primary hfs+ -1088MiB -64MiB
+mkpart primary fat32 -64MiB 100%
+quit
+```
+
+9. Format the partitions (still as sudo)
+
+```bash
+# Replace sdX with the correct device for the SD card
+mkfs.hfsplus -v "Macintosh HD" /dev/sdX2
+mkfs.hfsplus -v "Install" /dev/sdX3
+mkfs.vfat -F 32 -n "Support" /dev/sdX4
+```
+
+The partitions should look like this:
+
+```bash
+lsblk -f
+NAME   FSTYPE  FSVER LABEL        UUID                                 FSAVAIL FSUSE% MOUNTPOINTS
+sda    ext4    1.0
+sdb    ext4    1.0
+sdc    swap    1                  3d051596-f50e-407d-9696-a285606a071c                [SWAP]
+sdd    ext4    1.0                633fba1b-1ccb-4dbf-bed6-79822f9f35a1  953.5G     0% /mnt/wslg/distro
+                                                                                      /
+sde
+├─sde1
+├─sde2 hfsplus       Macintosh HD 5597f954-c9f4-36fc-b381-fe2ff0f36980
+├─sde3 hfsplus       Install      2af72876-9f6e-3364-bbe4-6cc68c3abcaa
+├─sde4 vfat    FAT32 Support      6852-6DC8
+└─sde5
+sdf
+```
+
+</details>
+
 ##### Flashing Installer
 
 Next, we need our newly-created Install partition to contain a bootable Mac OS X installer. ISO backups of Mac OS X install media exist for many versions of Mac OS X. Once you’ve obtained an installer disk image for a [supported version](#Supported-Mac-OS-X-Versions), mount it and then perform the following steps depending on your host operating system:
@@ -195,6 +331,84 @@ sudo dd if=/dev/sdYB of=/dev/sdXA bs=1M status=progress conv=fsync
 
 </details>
 
+<details>
+<summary>WSL Host</summary>
+
+1. Download the ISO in Windows and copy into WSL.
+
+2. Use the following commands to create logical devices for each partition in the installer image.
+
+```bash
+sudo kpartx -av /path/to/installer/iso
+```
+
+Example output:
+
+```
+add map loop0p3 (254:0): 0 60 linear 7:0 4
+add map loop0p4 (254:1): 0 56 linear 7:0 64
+add map loop0p5 (254:2): 0 120 linear 7:0 120
+add map loop0p6 (254:3): 0 56 linear 7:0 240
+add map loop0p7 (254:4): 0 120 linear 7:0 296
+add map loop0p8 (254:5): 0 512 linear 7:0 416
+add map loop0p9 (254:6): 0 1157000 linear 7:0 928
+```
+
+2. Run the following terminal command to obtain the device and partition numbers for the SD card Install partition and the Mac OS X installer partition.
+
+```bash
+lsblk -f
+```
+
+Example output:
+
+```
+NAME      FSTYPE  FSVER LABEL               UUID                                 FSAVAIL FSUSE% MOUNTPOINTS
+loop0
+├─loop0p3
+├─loop0p4
+├─loop0p5
+├─loop0p6
+├─loop0p7
+├─loop0p8
+└─loop0p9 hfsplus       Mac OS X Install CD 8b4e037f-d046-3610-a311-757aaede1493
+sda       ext4    1.0
+sdb       ext4    1.0
+sdc       swap    1                         3d051596-f50e-407d-9696-a285606a071c                [SWAP]
+sdd       ext4    1.0                       633fba1b-1ccb-4dbf-bed6-79822f9f35a1  953.5G     0% /mnt/wslg/distro
+                                                                                                /
+sde
+├─sde1
+├─sde2    hfsplus       Macintosh HD        5597f954-c9f4-36fc-b381-fe2ff0f36980
+├─sde3    hfsplus       Install             2af72876-9f6e-3364-bbe4-6cc68c3abcaa
+├─sde4    vfat    FAT32 Support             6852-6DC8
+└─sde5
+sdf
+```
+
+3. Block-level copy the contents of the source Mac OS X installer partition to the destination Install partition on your SD card.
+
+> Note that the loopback partitions are exposed under /dev/mapper and not /dev/:
+
+```bash
+# Replace sdXA with the correct device and partition number for the SD card Install partition
+# Replace loopYpB with the correct device and partition number for the source installation
+sudo dd if=/dev/mapper/loopYpB of=/dev/sdXA bs=1M status=progress conv=fsync
+```
+
+Example:
+
+```
+sudo dd if=/dev/mapper/loop0p9 of=/dev/sde3 bs=1M status=progress conv=fsync
+307232768 bytes (307 MB, 293 MiB) copied, 1 s, 307 MB/s592384000 bytes (592 MB, 565 MiB) copied, 1.86659 s, 317 MB/s
+
+564+1 records in
+564+1 records out
+592384000 bytes (592 MB, 565 MiB) copied, 77.7162 s, 7.6 MB/s
+```
+
+</details>
+
 ##### Preparing Support Partition
 
 The FAT32 “Support” partition is where we’ll store the patched kernel and drivers. Create a folder titled “wiiMac” at the root of this partition, and copy the appropriate mach_kernel and driver kexts into that folder. Refer to the [supported version table](#Supported-Mac-OS-X-Versions) for links to download a patched kernel and drivers.
@@ -208,6 +422,54 @@ Verify that the following files exist on the Support partition:
     ├── IOUSBFamily.kext
     └── NintendoWii*.kext (all other drivers)
 ```
+
+<details>
+<summary>WSL Host Notes</summary>
+
+Microsoft's default WSL2 kernel is heavily optimized and intentionally omits the `vfat` (FAT32) kernel module to save space and reduce boot time. Because of this, the standard `mount` command for FAT32 filesystems will always fail natively inside WSL2 unless you compile a custom kernel. You can attempt to unmount the volume and just copy the files in using Windows but that didn't work for me.  Instead we'll use ```mtools``` utilities to copy files into the partition.
+
+```bash
+sudo mmd -i /dev/sdXA ::/wiiMac
+sudo mcopy -s -i /dev/sdXA /mnt/c/path/to/files/* ::/wiiMac
+```
+
+Confirm the contents of the drive:
+
+```bash
+sudo mdir -i /dev/sdXA ::/wiiMac/
+```
+
+Example output:
+
+```
+ Volume in drive : is Support
+ Volume Serial Number is 6852-6DC8
+Directory for ::/wiiMac
+
+.            <DIR>     2026-06-28  19:28
+..           <DIR>     2026-06-28  19:28
+IOUSBF~1 KEX <DIR>     2026-06-28  19:03  IOUSBFamily.kext
+NINTEN~1 KEX <DIR>     2026-06-28  19:03  NintendoWiiEXI.kext
+NINTEN~2 KEX <DIR>     2026-06-28  19:03  NintendoWiiFramebuffer.kext
+NINTEN~3 KEX <DIR>     2026-06-28  19:03  NintendoWiiHollywood.kext
+NINTEN~4 KEX <DIR>     2026-06-28  19:03  NintendoWiiIPC.kext
+NINTEN~5 KEX <DIR>     2026-06-28  19:03  NintendoWiiNVRAM.kext
+NINTEN~6 KEX <DIR>     2026-06-28  19:03  NintendoWiiPE.kext
+NINTEN~7 KEX <DIR>     2026-06-28  19:03  NintendoWiiPIC0.kext
+NINTEN~8 KEX <DIR>     2026-06-28  19:03  NintendoWiiPIC1.kext
+NINTEN~9 KEX <DIR>     2026-06-28  19:03  NintendoWiiSDCard.kext
+MACH_K~1       4038868 2026-06-28  19:03  mach_kernel
+       13 files           4 038 868 bytes
+                         57 349 120 bytes free
+```
+
+Then unmount the drive from WSL in your Administrator PowerShell window:
+
+```powershell
+usbipd detach --all
+```
+
+</details>
 
 ### Installing Mac OS X
 
